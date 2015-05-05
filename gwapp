@@ -55,12 +55,12 @@ function eContinue {
 	}
 
 function getURL {
-	URLS=`curl -s -k --user $GWADMIN:$PWD $LISTURL |gawk --field-separator=, 'NR!=1 {print "'$BASEURL'/domains/"$1"/postoffices/"$2"/users/"$3"/directorylink"}'` 
+	URLS=`curl -s -k --user $GWADMIN:$PWD $LISTURL | sed 's/\s*$//' | sed 's/ /%20/g' |gawk --field-separator=, 'NR!=1 {print "'$BASEURL'/domains/"$1"/postoffices/"$2"/users/"$3"/directorylink"}'` 
 }
 
 function getURLAppend {
 	local tempURLS="$URLS";
-	URLS=`curl -s -k --user $GWADMIN:$PWD $LISTURL |gawk --field-separator=, 'NR!=1 {print "'$BASEURL'/domains/"$1"/postoffices/"$2"/users/"$3"/directorylink"}'`
+	URLS=`curl -s -k --user $GWADMIN:$PWD $LISTURL | sed 's/\s*$//' | sed 's/ /%20/g' |gawk --field-separator=, 'NR!=1 {print "'$BASEURL'/domains/"$1"/postoffices/"$2"/users/"$3"/directorylink"}'`
 	URLS=`echo -e "$URLS\n$tempURLS"`
 }
 
@@ -646,7 +646,7 @@ if [ "$validURL" = "200" ];then
 	esac
 	done
 else
-	echo "Unable to connect to $BASEURL"
+	echo -e "\nUnable to find Admin Service: $IP:$PORT"
 	eContinue;
 fi
 clear;exit 0;
