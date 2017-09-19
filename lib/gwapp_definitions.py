@@ -28,14 +28,7 @@ import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
 
 # GLOBAL VARIABLES
-SCRIPT_NAME = 'gwapp'
-gwappDirectory = "/opt/gwapp"
-gwappConf = gwappDirectory + "/conf"
-gwappLogs = gwappDirectory + "/logs"
-gwappLogSettings = gwappConf + "/logging.cfg"
-gwappSettings = gwappConf + "/setting.cfg"
-COMPANY_BU = 'Micro Focus'
-ERROR_MSG = "\ndgwapp has encountered an error. See gwapp.log for more details"
+from gwapp_variables import *
 
 if sys.stdout.isatty():
 	WINDOW_SIZE = rows, columns = os.popen('stty size', 'r').read().split()

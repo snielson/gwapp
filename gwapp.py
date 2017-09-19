@@ -30,12 +30,7 @@ if (os.getuid() != 0):
 ##################################################################################################
 
 # Global Variables
-gwappDirectory = "/opt/gwapp"
-gwappConf = gwappDirectory + "/conf"
-gwappSettings = gwappConf + "/setting.cfg"
-gwappLogs = gwappDirectory + "/logs"
-gwappTmp = gwappDirectory + "/tmp"
-gwappLogSettings = gwappConf + "/logging.cfg"
+from gwapp_variables import *
 WSDL = 'file://%s/wsdl/GW2012/groupwise.wsdl' % (os.path.dirname(os.path.realpath(__file__)) + '/lib')
 
 # Create gwapp folder stucture
