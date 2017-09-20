@@ -32,5 +32,7 @@ def initLogin():
 	login = []
 
 def initSystem():
-	global system
-	system = dict()
+	global domainSystem
+	global postofficeSystem
+	domainSystem = dict()
+	postofficeSystem = dict()

@@ -13,7 +13,6 @@ import select
 import subprocess
 import getpass
 import json
-import xml.etree.ElementTree as ET
 import gwapp_json
 import getch
 getch = getch._Getch()
@@ -336,9 +335,13 @@ def getSystemList(login):
 	logger.info("Creating global domain and post office links")
 	for domain in domains:
 		postoffices = getPostOffices(login, domain)
-		gwapp_variables.system[domain] = postoffices
-		logger.debug("Creating key: %s" % domain)
+		gwapp_variables.domainSystem[domain] = postoffices
+		logger.debug("Creating domainSystem key: %s" % domain)
 		logger.debug("Adding value: %s" % postoffices)
+		for postoffice in postoffices:
+			gwapp_variables.postofficeSystem[postoffice] = domain
+			logger.debug("Creating postofficeSystem key: %s" % postoffices)
+			logger.debug("Adding value: %s" % domain)
 
 def createTrustedApp(login, appName='gwapp', delete=False):
 	if not checkTrustedApp(login, appName, delete=delete):
