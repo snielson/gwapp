@@ -13,6 +13,7 @@ import select
 import subprocess
 import getpass
 import json
+import xml.etree.ElementTree as ET
 import gwapp_json
 import getch
 getch = getch._Getch()
@@ -28,7 +29,8 @@ import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
 
 # GLOBAL VARIABLES
-from gwapp_variables import *
+import gwapp_variables
+gwapp_variables.setGlobalVariables()
 
 if sys.stdout.isatty():
 	WINDOW_SIZE = rows, columns = os.popen('stty size', 'r').read().split()
@@ -38,7 +40,7 @@ else:
 
 
 # Log Settings
-logging.config.fileConfig('%s/logging.cfg' % (gwappConf))
+logging.config.fileConfig('%s/logging.cfg' % (gwapp_variables.gwappConf))
 logger = logging.getLogger(__name__)
 excep_logger = logging.getLogger('exceptions_log')
 
@@ -52,7 +54,7 @@ def my_handler(type, value, tb):
 sys.excepthook = my_handler
 
 # Read Config
-Config.read(gwappSettings)
+Config.read(gwapp_variables.gwappSettings)
 gwappversion = Config.get('Misc', 'gwapp.version')
 
 def clear():
@@ -188,24 +190,30 @@ def getServerInfo():
 	logger.info("URL = https://%s:%s" % (server,port))
 	return url
 
-def getPassWD():
-	p1 = None
-	p2 = None
-	p1 = getpass.getpass("Enter password: ")
-	p2 = getpass.getpass("Re-Enter password: ")
-	if p1 == p2:
-		logger.info("Passwords match")
-		return p1
+def getPassWD(debug=False):
+	if not debug:
+		p1 = None
+		p2 = None
+		p1 = getpass.getpass("Enter password: ")
+		p2 = getpass.getpass("Re-Enter password: ")
+		if p1 == p2:
+			logger.info("Passwords match")
+			return p1
+		else:
+			print ("Passwords do not match")
+			logger.error("Passwords do not match")
+			return None
 	else:
-		print ("Passwords do not match")
-		logger.error("Passwords do not match")
-		return None
+		return 'novell'
 
-def getGWLogin():
+def getGWLogin(debug=False):
 	loginInfo = dict()
 	loginInfo['url'] = getServerInfo()
 	loginInfo['admin'] = getUserID("Admin user: ")
-	loginInfo['pass'] = getPassWD()
+	if not debug:
+		loginInfo['pass'] = getPassWD()
+	else:
+		loginInfo['pass'] = 'novell'
 	return loginInfo
 
 def checkDictKeys(list):
@@ -216,14 +224,14 @@ def checkDictKeys(list):
 			result = False
 	return result
 
-def saveServerSettings(reconfig=False):
+def saveServerSettings(reconfig=False, debug=False):
 	gwappBanner(gwappversion)
-	Config.read(gwappSettings)
+	Config.read(gwapp_variables.gwappSettings)
 	if Config.get('Login', 'url') == 'None' or Config.get('Login','admin') == 'None' or reconfig:
-		login = getGWLogin()
+		login = getGWLogin(debug)
 		if checkDictKeys(login):
 			if askYesOrNo("\nStore login information"):
-				with open(gwappSettings, 'wb') as cfgfile:
+				with open(gwapp_variables.gwappSettings, 'wb') as cfgfile:
 					Config.set('Login', 'url', login['url'])
 					Config.set('Login', 'admin', login['admin'])
 					logger.debug("Writing: [Login] url = %s" % login['url'])
@@ -236,7 +244,7 @@ def saveServerSettings(reconfig=False):
 	else:
 		logger.info("Found url login information")
 		print ("GroupWise Administration password")
-		passwd = getPassWD()
+		passwd = getPassWD(debug)
 		if passwd is None:
 			sys.exit(1)
 		login = {'url':Config.get('Login', 'url'), 'admin':Config.get('Login', 'admin'), 'pass': passwd}
@@ -264,7 +272,8 @@ def checkLoginInfo(login):
 def restGetRequest(login, urlPath):
 	r = None
 	try:
-		r = requests.get(login['url'] + urlPath, auth=(login['admin'],login['pass']), verify=False)
+		r = requests.get(login['url'] + urlPath, auth=(login['admin'],login['pass']), verify=False, headers={"Accept":"application/json"})
+		logger.debug("GET request URL: %s" % login['url'] + urlPath)
 		logger.info("Status code: %s" % r.status_code)
 	except:
 		pass
@@ -274,6 +283,7 @@ def restPostRequest(login, urlPath, data, header):
 	r = None
 	try:
 		r = requests.post(login['url'] + urlPath, auth=(login['admin'], login['pass']), verify=False, data=json.dumps(data), headers=header)
+		logger.debug("POST request URL: %s" % login['url'] + urlPath)
 		logger.info("Status code: %s" % r.status_code)
 	except:
 		pass
@@ -287,14 +297,48 @@ def restDeleteRequest(login, urlPath):
 	r = None
 	try:
 		r = requests.delete(login['url'] + urlPath, auth=(login['admin'],login['pass']), verify=False)
+		logger.debug("DELETE request URL: %s" % login['url'] + urlPath)
 		logger.info("Status code: %s" % r.status_code)
 	except:
 		pass
 
 	if r.status_code == 200:
 		logger.info("Successfully deleted %s" % login['url'] + urlPath)
-
 	return r
+
+def getDomains(login):
+	# Gets domains in JSON. Loop through data, and pull names into list
+	domains = []
+	r = restGetRequest(login, '/gwadmin-service/domains')
+	logger.info("Building list of domains..")
+	for objects in r.json()['object']:
+		domains.append(objects['name'])
+		logger.debug("Appending domain to list: %s" % objects['name'])
+	return domains
+
+def getPostOffices(login, domain):
+	# Gets postoffices in JSON. Loop through data, and pull names into list
+	postoffices = []
+	url = "/gwadmin-service/domains/%s/postoffices" % domain
+	logger.info("Building list of post offices..")
+	r = restGetRequest(login, url)
+	try:
+		for objects in r.json()['object']:
+			postoffices.append(objects['name'])
+			logger.debug("Appending post office to list: %s" % objects['name'])
+	except KeyError: # KeyError if domain has no post office
+		pass
+	return postoffices
+
+def getSystemList(login):
+	gwapp_variables.initSystem()
+	domains = getDomains(login)
+	logger.info("Creating global domain and post office links")
+	for domain in domains:
+		postoffices = getPostOffices(login, domain)
+		gwapp_variables.system[domain] = postoffices
+		logger.debug("Creating key: %s" % domain)
+		logger.debug("Adding value: %s" % postoffices)
 
 def createTrustedApp(login, appName='gwapp', delete=False):
 	if not checkTrustedApp(login, appName, delete=delete):
@@ -304,7 +348,7 @@ def createTrustedApp(login, appName='gwapp', delete=False):
 			if r.status_code == 201:
 				print ("Successfully created trusted application '%s'" % appName)
 				logger.info("Successfully created trusted application '%s'" % appName)
-				with open(gwappSettings, 'wb') as cfgfile:
+				with open(gwapp_variables.gwappSettings, 'wb') as cfgfile:
 					Config.set('Settings', 'trustedName', appName)
 					Config.set('Settings', 'trustedKey', r.text)
 					Config.write(cfgfile)
@@ -324,9 +368,9 @@ def checkTrustedApp(login, appName, delete=False):
 		logger.info("No trusted application")
 		return False
 
-	Config.read(gwappSettings)
+	Config.read(gwapp_variables.gwappSettings)
 	if Config.get('Settings', 'trustedName') == 'None' or Config.get('Settings', 'trustedKey') == 'None':
-		print ("\nTrusted application config missing. See '%s --help' to recreate" % SCRIPT_NAME)
+		print ("\nTrusted application config missing. See '%s --help' to recreate" % gwapp_variables.SCRIPT_NAME)
 		logger.error("setting.cfg missing trusted application information")
 		sys.exit(1)
 

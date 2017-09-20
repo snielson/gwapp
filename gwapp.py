@@ -30,18 +30,19 @@ if (os.getuid() != 0):
 ##################################################################################################
 
 # Global Variables
-from gwapp_variables import *
+import gwapp_variables
+gwapp_variables.setGlobalVariables()
 WSDL = 'file://%s/wsdl/GW2012/groupwise.wsdl' % (os.path.dirname(os.path.realpath(__file__)) + '/lib')
 
 # Create gwapp folder stucture
-gwapp_folders = [gwappDirectory, gwappConf, gwappLogs, gwappTmp]
+gwapp_folders = [gwapp_variables.gwappDirectory, gwapp_variables.gwappConf, gwapp_variables.gwappLogs, gwapp_variables.gwappTmp]
 for folder in gwapp_folders:
 	if not os.path.exists(folder):
 		os.makedirs(folder)
 
 # Create setting.cfg if not found
-if not os.path.isfile(gwappSettings):
-	with open(gwappSettings, 'w') as cfgfile:
+if not os.path.isfile(gwapp_variables.gwappSettings):
+	with open(gwapp_variables.gwappSettings, 'w') as cfgfile:
 		Config.add_section('Misc')
 		Config.add_section('Login')
 		Config.add_section('Settings')
@@ -57,7 +58,7 @@ if not os.path.isfile(gwappSettings):
 ##################################################################################################
 
 # Log Settings
-logging.config.fileConfig(gwappLogSettings)
+logging.config.fileConfig(gwapp_variables.gwappLogSettings)
 excep_logger = logging.getLogger('exceptions_log')
 logger = logging.getLogger(__name__)
 logger.info('------------- Starting gwapp v%s -------------' % gwappversion)
@@ -73,8 +74,8 @@ def exit_cleanup():
 	logger.debug("Running exit cleanup..")
 
 	# Clear gwapp/tmp
-	gw.removeAllFolders(gwappTmp)
-	gw.removeAllFiles(gwappTmp)
+	gw.removeAllFolders(gwapp_variables.gwappTmp)
+	gw.removeAllFiles(gwapp_variables.gwappTmp)
 
 	# Reset terminal (for blank text bug on Ctrl + C)
 	os.system('stty sane')
@@ -124,18 +125,19 @@ logger.debug("Switches: %s" % args)
 # Set logs if loglevel switch passed in
 if args.loglevel:
 	logger.info("Running switch: setlog")
-	Config.read(gwappLogSettings)
+	Config.read(gwapp_variables.gwappLogSettings)
 	Config.set('logger___main__', 'level', args.loglevel.upper())
 	Config.set('logger_gwapp_definitions', 'level', args.loglevel.upper())
-	with open(gwappLogSettings, 'wb') as logFile:
+	with open(gwapp_variables.gwappLogSettings, 'wb') as logFile:
 		Config.write(logFile)
-	print "gwapp logs set to %s" % args.loglevel.upper()
+	print ("gwapp logs set to %s" % args.loglevel.upper())
 	logger.info("gwapp logs set to %s" % args.loglevel.upper())
 	sys.exit(0)
 
 # Get or set login info
-login = gw.saveServerSettings(args.config)
-gw.createTrustedApp(login, delete=args.newApp)
+gwapp_variables.initLogin()
+gwapp_variables.login = gw.saveServerSettings(args.config)
+gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 
 ##################################################################################################
 #	DEBUG
@@ -143,6 +145,7 @@ gw.createTrustedApp(login, delete=args.newApp)
 
 DEBUG_ENABLED = False
 if DEBUG_ENABLED:
+	pass
 
 	gw.eContinue()
 	sys.exit(0)
@@ -152,7 +155,7 @@ if DEBUG_ENABLED:
 ##################################################################################################
 
 # Check login info before loading the script
-if not gw.checkLoginInfo(login):
+if not gw.checkLoginInfo(gwapp_variables.login):
 	sys.exit(1)
 
 import gwapp_menu as menu
