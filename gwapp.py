@@ -145,7 +145,7 @@ gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 DEBUG_ENABLED = True
 if DEBUG_ENABLED:
 	import gwapp_ghc as ghc
-	print ghc.getpoSec()
+	ghc.ErrChkLogs()
 
 	gw.eContinue()
 	sys.exit(0)

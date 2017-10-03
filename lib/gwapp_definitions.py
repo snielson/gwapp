@@ -379,3 +379,14 @@ def checkTrustedApp(login, appName, delete=False):
 
 	logger.info("Trusted application found")
 	return True
+
+def getPOLogPath(dom, PO):
+	getSystemList(gwapp_variables.login)
+	logFilePath = dict()
+	url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, PO)
+	r = restGetRequest(gwapp_variables.login, url)
+	try:
+		logFilePath[PO] = (r.json()['object'][0]['logFilePath'])
+	except:
+		logFilePath[PO] = None
+	return logFilePath
