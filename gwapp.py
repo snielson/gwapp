@@ -4,8 +4,6 @@ __author__ = "Shane Nielson"
 __maintainer__ = "Shane Nielson"
 __email__ = "snielson@projectuminfinitas.com"
 
-gwappversion='1'
-
 import os
 import sys
 import traceback
@@ -15,6 +13,8 @@ import ConfigParser
 Config = ConfigParser.ConfigParser()
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/lib')
+import gwapp_variables
+gwapp_variables.initVersion()
 
 ##################################################################################################
 #	Start up check
@@ -30,7 +30,6 @@ if (os.getuid() != 0):
 ##################################################################################################
 
 # Global Variables
-import gwapp_variables
 gwapp_variables.setGlobalVariables()
 WSDL = 'file://%s/wsdl/GW2012/groupwise.wsdl' % (os.path.dirname(os.path.realpath(__file__)) + '/lib')
 
@@ -46,7 +45,7 @@ if not os.path.isfile(gwapp_variables.gwappSettings):
 		Config.add_section('Misc')
 		Config.add_section('Login')
 		Config.add_section('Settings')
-		Config.set('Misc', 'gwapp.version', gwappversion)
+		Config.set('Misc', 'gwapp.version', gwapp_variables.gwappversion)
 		Config.set('Login', 'url', None)
 		Config.set('Login', 'admin', None)
 		Config.set('Settings', 'trustedName', None)
@@ -61,7 +60,7 @@ if not os.path.isfile(gwapp_variables.gwappSettings):
 logging.config.fileConfig(gwapp_variables.gwappLogSettings)
 excep_logger = logging.getLogger('exceptions_log')
 logger = logging.getLogger(__name__)
-logger.info('------------- Starting gwapp v%s -------------' % gwappversion)
+logger.info('------------- Starting gwapp v%s -------------' % gwapp_variables.gwappversion)
 if not sys.stdout.isatty():
 	logger.info('Running in CRON')
 
@@ -80,7 +79,7 @@ def exit_cleanup():
 	# Reset terminal (for blank text bug on Ctrl + C)
 	os.system('stty sane')
 	
-	logger.info('------------- Exiting gwapp v%s -------------' % gwappversion)
+	logger.info('------------- Exiting gwapp v%s -------------' % gwapp_variables.gwappversion)
 
 def signal_handler_SIGINT(signal, frame):
 	# Clean up gwapp
@@ -115,7 +114,7 @@ if sys.stdout.isatty():
 ##################################################################################################
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('--version', action='version', version='%(prog)s (version {version})'.format(version=gwappversion))
+parser.add_argument('--version', action='version', version='%(prog)s (version {version})'.format(version=gwapp_variables.gwappversion))
 parser.add_argument('--setlog', dest='loglevel', choices=['debug','info','warning'], help='Set the logging level')
 parser.add_argument('-c', '--config', action='store_true', dest='config', help='Prompt to store new server settings')
 parser.add_argument('-t', '--trusted', action='store_true', dest='newApp', help='Recreate the default trusted application')
@@ -143,9 +142,10 @@ gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 #	DEBUG
 ##################################################################################################
 
-DEBUG_ENABLED = False
+DEBUG_ENABLED = True
 if DEBUG_ENABLED:
-	pass
+	import gwapp_ghc as ghc
+	ghc.mainCheck()
 
 	gw.eContinue()
 	sys.exit(0)

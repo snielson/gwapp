@@ -13,6 +13,7 @@ import select
 import subprocess
 import getpass
 import json
+import traceback
 import gwapp_json
 import getch
 getch = getch._Getch()
@@ -37,7 +38,6 @@ else:
 	# Default terminal size
 	WINDOW_SIZE = [24,80]
 
-
 # Log Settings
 logging.config.fileConfig('%s/logging.cfg' % (gwapp_variables.gwappConf))
 logger = logging.getLogger(__name__)
@@ -51,10 +51,6 @@ def my_handler(type, value, tb):
 
 # Install exception handler
 sys.excepthook = my_handler
-
-# Read Config
-Config.read(gwapp_variables.gwappSettings)
-gwappversion = Config.get('Misc', 'gwapp.version')
 
 def clear():
 	tmp = subprocess.call('clear',shell=True)
@@ -71,7 +67,7 @@ def gwappBanner(gwappversion):
 	print (banner + "\t\t         v" + gwappversion + "\n")
 
 def print_disclaimer(gwappversion):
-	gwappBanner(gwappversion)
+	gwappBanner(gwapp_variables.gwappversion)
 	prompt = 'Use at your own discretion. gwapp is not supported by Novell.\nSee [gwapp --bug] to report issues.'
 	print (prompt)
 	r,w,x = select.select([sys.stdin], [], [], 10)
@@ -224,7 +220,7 @@ def checkDictKeys(list):
 	return result
 
 def saveServerSettings(reconfig=False, debug=False):
-	gwappBanner(gwappversion)
+	gwappBanner(gwapp_variables.gwappversion)
 	Config.read(gwapp_variables.gwappSettings)
 	if Config.get('Login', 'url') == 'None' or Config.get('Login','admin') == 'None' or reconfig:
 		login = getGWLogin(debug)
@@ -379,3 +375,27 @@ def checkTrustedApp(login, appName, delete=False):
 
 	logger.info("Trusted application found")
 	return True
+
+def getPostSecurity():
+    postofficeSecurity = dict()
+    getSystemList(gwapp_variables.login)
+    for dom in gwapp_variables.domainSystem:
+        for post in gwapp_variables.domainSystem[dom]:
+            url = "/gwadmin-service/domains/%s/postoffices/%s" % (dom, post)
+            r = restGetRequest(gwapp_variables.login, url)
+            try:
+                postofficeSecurity[post] = (r.json()['securitySettings'])
+                logger.debug("Post Office [%s.%s] security set to %s" % (post, dom, r.json()['securitySettings']))
+            except:
+                logger.warning("Unable to find security setting")
+    return postofficeSecurity
+
+def getPOLogPath(dom, post):
+	logFilePath = dict()
+	url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
+	r = restGetRequest(gwapp_variables.login, url)
+	try:
+		logFilePath[post] = (r.json()['object'][0]['logFilePath'])
+	except:
+		logFilePath[post] = None
+	return logFilePath

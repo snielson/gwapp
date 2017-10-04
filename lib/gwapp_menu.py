@@ -10,19 +10,11 @@ Config = ConfigParser.ConfigParser()
 import getch
 getch = getch._Getch()
 
-COMPANY_BU = 'Micro Focus'
-DISCLAIMER = "%s accepts no liability for the consequences of any actions taken\n     by the use of this application. Use at your own discretion" % COMPANY_BU
-
-# Folders
-gwappDirectory = "/opt/gwapp"
-gwappConf = gwappDirectory + "/conf"
-gwappSettings = gwappConf + "/setting.cfg"
-gwappLogs = gwappDirectory + "/logs"
-gwappTmp = gwappDirectory + "/tmp"
-gwappLogSettings = gwappConf + "/logging.cfg"
+# GLOBAL VARIABLES
+import gwapp_variables
 
 # Log Settings
-logging.config.fileConfig('%s/logging.cfg' % (gwappConf))
+logging.config.fileConfig('%s/logging.cfg' % (gwapp_variables.gwappConf))
 logger = logging.getLogger('__main__')
 excep_logger = logging.getLogger('exceptions_log')
 
@@ -35,12 +27,8 @@ def my_handler(type, value, tb):
 # Install exception handler
 sys.excepthook = my_handler
 
-# Read Config
-Config.read(gwappSettings)
-gwappversion = Config.get('Misc', 'gwapp.version')
-
 def show_menu(menu_call):
-	gw.gwappBanner(gwappversion)
+	gw.gwappBanner(gwapp_variables.gwappversion)
 	logger.debug("Showing menu options: %s" % menu_call)
 
 	for i in xrange(len(menu_call)):

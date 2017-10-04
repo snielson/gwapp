@@ -36,3 +36,7 @@ def initSystem():
 	global postofficeSystem
 	domainSystem = dict()
 	postofficeSystem = dict()
+
+def initVersion():
+	global gwappversion
+	gwappversion = '1'
