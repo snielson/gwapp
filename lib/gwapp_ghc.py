@@ -43,7 +43,7 @@ def _util_NewHeader(header):
 	with open(healthCheckLog, 'a') as log:
 		log.write("==========================================================\n%s\n==========================================================\n" % header)
 
-def _util_passFail(result, msg=None):
+def _util_passFail(result, msg=None): # Prints to screen Passed,Failed, Warning, or Skipped with proper format
 	with open(healthCheckLog, 'a') as log:
 		if msg is not None:
 			log.write(msg)
@@ -87,10 +87,9 @@ def check_postSecurity():
 	security = gw.getPostSecurity()
 	with open(healthCheckLog, 'a') as log:
 		for key in security:
-			for index in xrange(len(security)):
-				if 'low' in (security[key][index]).lower():
-					problem = 'warning'
-				log.write("%s.%s has %s security\n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(security[key])))
+			if 'low' in (' '.join(security[key])).lower():
+				problem = 'warning'
+			log.write("%s.%s has %s security\n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(security[key])))
 	_util_passFail(problem)
 
 def check_agentCert(): # Check of Agent Certs
