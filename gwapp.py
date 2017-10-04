@@ -136,7 +136,7 @@ if args.loglevel:
 
 # Get or set login info
 gwapp_variables.initLogin()
-gwapp_variables.login = gw.saveServerSettings(args.config)
+gwapp_variables.login = gw.saveServerSettings(args.config,debug=True)
 gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 
 ##################################################################################################
