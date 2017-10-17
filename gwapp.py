@@ -15,6 +15,7 @@ Config = ConfigParser.ConfigParser()
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/lib')
 import gwapp_variables
 gwapp_variables.initVersion()
+gwapp_variables.setOSFiles()
 
 ##################################################################################################
 #	Start up check
@@ -52,6 +53,7 @@ if not os.path.isfile(gwapp_variables.gwappSettings):
 		Config.set('Settings', 'trustedKey', None)
 		Config.write(cfgfile)
 
+
 ##################################################################################################
 #	Log Settings
 ##################################################################################################
@@ -68,6 +70,11 @@ if not sys.stdout.isatty():
 #	Setup local definitions
 ##################################################################################################
 import gwapp_definitions as gw
+
+# Make sure setting.cfg is root only access
+if gw.getFilePermission(gwapp_variables.gwappSettings) != 448:
+	logger.info("Setting %s permission to 700" % gwapp_variables.gwappSettings)
+	os.chmod(gwapp_variables.gwappSettings, 0o700)
 
 def exit_cleanup():
 	logger.debug("Running exit cleanup..")
@@ -136,6 +143,12 @@ if args.loglevel:
 # Get or set login info
 gwapp_variables.initLogin()
 gwapp_variables.login = gw.saveServerSettings(args.config,debug=True)
+
+# Check login info before loading the script. Exit if fail
+if not gw.checkLoginInfo(gwapp_variables.login):
+	sys.exit(1)
+
+# Create trusted app
 gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 
 ##################################################################################################
@@ -153,10 +166,6 @@ if DEBUG_ENABLED:
 ##################################################################################################
 #	Main
 ##################################################################################################
-
-# Check login info before loading the script
-if not gw.checkLoginInfo(gwapp_variables.login):
-	sys.exit(1)
 
 import gwapp_menu as menu
 menu.main_menu()

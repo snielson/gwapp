@@ -4,8 +4,11 @@ __author__ = "Shane Nielson"
 __maintainer__ = "Shane Nielson"
 __email__ = "snielson@projectuminfinitas.com"
 
-# GLOBAL VARIABLES
-def setGlobalVariables():
+def initVersion():
+	global gwappversion
+	gwappversion = '1'
+
+def setGlobalVariables(): # GLOBAL VARIABLES
 	global SCRIPT_NAME
 	global gwappDirectory
 	global gwappConf
@@ -15,7 +18,6 @@ def setGlobalVariables():
 	global gwappSettings
 	global COMPANY_BU
 	global ERROR_MSG
-
 	SCRIPT_NAME = 'gwapp'
 	gwappDirectory = "/opt/gwapp"
 	gwappConf = gwappDirectory + "/conf"
@@ -32,11 +34,13 @@ def initLogin():
 	login = []
 
 def initSystem():
+	global gwiaSystem
 	global domainSystem
 	global postofficeSystem
+	gwiaSystem = dict()
 	domainSystem = dict()
 	postofficeSystem = dict()
 
-def initVersion():
-	global gwappversion
-	gwappversion = '1'
+def setOSFiles():
+	global gwhaFile
+	gwhaFile = "/etc/opt/novell/groupwise/gwha.conf"
