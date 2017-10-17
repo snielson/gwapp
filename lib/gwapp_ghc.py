@@ -105,7 +105,20 @@ def check_agentCert(): # Check of Agent Certs
 	pass
 
 def check_agentSSL(): # Set all Agents to Require SSL
-	pass
+	_util_NewHeader("Checking Agents for SSL set to Required..")
+	problem = 'passed'
+	SSLsecurity = gw.getSSLsettings()
+	with open(healthCheckLog, 'a') as log:
+		for key in SSLsecurity:
+			if 'ENABLED' or 'DISABLED' in (' '.join(SSLsecurity[key])).lower():
+				problem = 'warning'
+			log.write("%s.%s has %s security\n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(SSLsecurity[key])))
+
+	if problem == 'warning':
+		msg = "\nPost Offices have been found with LOW security\n"
+		_util_passFail(problem, msg)
+	else:
+		_util_passFail(problem)
 	# https://151.155.214.174:9710/gwadmin-service/domains/pkldom/postoffices/pklpo/poas
 
 def check_webaccHttpCert(): # Make sure the http cert for webaccess is used

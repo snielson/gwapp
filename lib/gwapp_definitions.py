@@ -456,3 +456,17 @@ def getLocalAgents():
 
 def getFilePermission(file):
 	return stat.S_IMODE(os.stat(file).st_mode)
+
+def getPOASSLsettings():
+    postofficessl = dict()
+    getSystemList(gwapp_variables.login)
+    for dom in gwapp_variables.domainSystem:
+        for post in gwapp_variables.domainSystem[dom]:
+            url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
+            r = restGetRequest(gwapp_variables.login, url)
+            try:
+                postofficessl[post] = (r.json()['clientServerUsesSsl'])
+                logger.debug("Post Office [%s.%s] Client/Server SSL set to %s" % (post, dom, r.json()['clientServerUsesSsl']))
+            except:
+                logger.warning("Unable to find SSL settings")
+    return postofficessl
