@@ -33,7 +33,7 @@ colorYELLOW = "\033[01;33m{0}\033[00m"
 colorBLUE = "\033[01;34m{0}\033[00m"
 
 # Printing Columns
-COL1 = "{0:35}"
+COL1 = "{0:40}"
 
 ###  Utility definitions for General Health Checks ###
 def _util_NewHeader(header):
@@ -43,7 +43,7 @@ def _util_NewHeader(header):
 	with open(healthCheckLog, 'a') as log:
 		log.write("==========================================================\n%s\n==========================================================\n" % header)
 
-def _util_passFail(result, msg=None):
+def _util_passFail(result, msg=None): # Prints to screen Passed,Failed, Warning, or Skipped with proper format
 	with open(healthCheckLog, 'a') as log:
 		if msg is not None:
 			log.write(msg)
@@ -74,24 +74,32 @@ def mainCheck(): # Main function to run all health checks
 		log.write("Gathered by gwapp v%s on %s\n\n" % (gwapp_variables.gwappversion, datetime.datetime.now().strftime('%c')))
 	logger.info("Starting General Health Check..")
 
+	# Get current system list
+	gw.getSystemList(gwapp_variables.login)
 	# List of checks to run..
 	check_postSecurity()
+	check_dvaConfigured()
+	check_gwhaFile()
 
 	print();print() # Adds spacing after all checks
 
 
 
 def check_postSecurity():
-	_util_NewHeader("Checking Post Office Security..")
+	_util_NewHeader("Checking [all] Post Office Security..")
 	problem = 'passed'
 	security = gw.getPostSecurity()
 	with open(healthCheckLog, 'a') as log:
 		for key in security:
-			for index in xrange(len(security)):
-				if 'low' in (security[key][index]).lower():
-					problem = 'warning'
-				log.write("%s.%s has %s security\n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(security[key])))
-	_util_passFail(problem)
+			if 'low' in (' '.join(security[key])).lower():
+				problem = 'warning'
+			log.write("%s.%s has %s security\n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(security[key])))
+
+	if problem == 'warning':
+		msg = "\nPost Offices have been found with LOW security\n"
+		_util_passFail(problem, msg)
+	else:
+		_util_passFail(problem)
 
 def check_agentCert(): # Check of Agent Certs
 	pass
@@ -119,7 +127,6 @@ def check_diskSpace(): # Disk Space on Post Office Servers
 	pass # TODO: Need to figure out how to read in where the data is located for pass/fail.
 
 def check_poaErrorLog(): # Error Check on all POA logs
-	gw.getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		for post in gwapp_variables.domainSystem[dom]:
 			logpath = gw.getPOLogPath(dom, post)
@@ -151,3 +158,48 @@ def check_imapSettings(): # IMAP Settings for max messages per folder / Read Fir
 
 def check_Retention(): # Retention Plan and Software
 	pass
+
+def check_dvaConfigured():
+	_util_NewHeader("Checking [all] Post Office DVA..")
+	problem = 'passed'
+	
+	with open(healthCheckLog, 'a') as log:
+		# Check post office for DVA
+		for post in gwapp_variables.postofficeSystem:
+			DVA = None
+			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (gwapp_variables.postofficeSystem[post], post)
+			r = gw.restGetRequest(gwapp_variables.login, url)
+			try:
+				DVA = (r.json()['object'][0]['dvaName1'])
+			except:
+				pass
+
+			if DVA is None:
+				log.write("%s.%s has no DVA configured\n" % (post, gwapp_variables.postofficeSystem[post]))
+				problem = 'failed'
+
+	if problem == 'failed':
+		_util_passFail(problem)
+	else:
+		msg = "Every Post Office has DVA configured\n"
+		_util_passFail(problem, msg)
+
+def check_gwhaFile(): # Look for any duplicates in the gwha.conf file
+	_util_NewHeader("Checking [local] GWHA duplicates..")
+	problem = 'passed'
+	agent = []
+	with open(gwapp_variables.gwhaFile, 'r') as gwha:
+		for line in gwha:
+			if ';' not in line:
+				if ('startup=' in line) or ('[' in line and ']' in line):
+					agent.append(line)
+
+	if len(agent) != len(set(agent)):
+		problem = 'failed'
+
+	if problem == 'failed':
+		msg = "\nDuplicate lines found in gwha.conf\n"
+		_util_passFail(problem, msg)
+	else:
+		msg = "No duplicates found in gwha.conf\n"
+		_util_passFail(problem, msg)

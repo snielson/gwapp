@@ -13,6 +13,7 @@ import select
 import subprocess
 import getpass
 import json
+import stat
 import traceback
 import gwapp_json
 import getch
@@ -164,6 +165,17 @@ def getUserID(prompt = "User ID: "):
 				userID = None
 	logger.info("User ID = %s" % userID)
 	return userID
+
+def util_subprocess(cmd, error=False):
+	if not error:
+		p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+		p.wait()
+		out = p.communicate()
+	elif error:
+		p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p.wait()
+		out = p.communicate()
+	return out
 
 def getServerInfo():
 	server = None
@@ -325,6 +337,20 @@ def getPostOffices(login, domain):
 		pass
 	return postoffices
 
+def getGWIA(login, domain):
+	# Gets gwia in JSON. Loop through data, and pull names into list
+	gwias = []
+	url = "/gwadmin-service/domains/%s/gwias" % domain
+	logger.info("Building list of post offices..")
+	r = restGetRequest(login, url)
+	try:
+		for objects in r.json()['object']:
+			gwias.append(objects['name'])
+			logger.debug("Appending post office to list: %s" % objects['name'])
+	except KeyError: # KeyError if domain has no gwia
+		pass
+	return gwias
+
 def getSystemList(login):
 	gwapp_variables.initSystem()
 	domains = getDomains(login)
@@ -334,9 +360,16 @@ def getSystemList(login):
 		gwapp_variables.domainSystem[domain] = postoffices
 		logger.debug("Creating domainSystem key: %s" % domain)
 		logger.debug("Adding value: %s" % postoffices)
-		for postoffice in postoffices:
+
+		for postoffice in postoffices: # Create postoffice dictionary
 			gwapp_variables.postofficeSystem[postoffice] = domain
 			logger.debug("Creating postofficeSystem key: %s" % postoffices)
+			logger.debug("Adding value: %s" % domain)
+
+		gwias = getGWIA(login, domain)
+		for gwia in gwias:
+			gwapp_variables.gwiaSystem[gwia] = domain
+			logger.debug("Creating gwiaSystem key: %s" % gwia)
 			logger.debug("Adding value: %s" % domain)
 
 def createTrustedApp(login, appName='gwapp', delete=False):
@@ -363,8 +396,12 @@ def checkTrustedApp(login, appName, delete=False):
 
 	logger.info("Checking if trusted application '%s' exists.." % appName)
 	r = restGetRequest(login, '/gwadmin-service/system/trustedapps/%s' % appName)
-	if r.status_code != 200:
-		logger.info("No trusted application")
+	try:
+		if r.status_code != 200:
+			logger.info("No trusted application")
+			return False
+	except AttributeError:
+		logger.error("Unable to connect to address")
 		return False
 
 	Config.read(gwapp_variables.gwappSettings)
@@ -399,3 +436,23 @@ def getPOLogPath(dom, post):
 	except:
 		logFilePath[post] = None
 	return logFilePath
+
+def getLocalAgents():
+	agents = []
+	agent = dict()
+	services = "/opt/novell/groupwise/admin/gwadminutil services -l"
+	out = util_subprocess(services)
+	for line in out[0].splitlines():
+		if "Service" in line:
+			agent['service'] = line.split(' ')[1]
+		if "Executable" in line:
+			agent['executable'] = line.split(' ')[1]
+		if "Startup" in line:
+			agent['startup'] = line.split(' ')[1]
+		if not line and len(agent) >= 1:
+			agents.append(agent)
+			agent = dict()
+	return agents
+
+def getFilePermission(file):
+	return stat.S_IMODE(os.stat(file).st_mode)
