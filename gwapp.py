@@ -32,7 +32,7 @@ if (os.getuid() != 0):
 
 # Global Variables
 gwapp_variables.setGlobalVariables()
-WSDL = 'file://%s/wsdl/GW2012/groupwise.wsdl' % (os.path.dirname(os.path.realpath(__file__)) + '/lib')
+WSDL = 'file://%s/wsdl/GW2014/groupwise.wsdl' % (os.path.dirname(os.path.realpath(__file__)) + '/lib')
 
 # Create gwapp folder stucture
 gwapp_folders = [gwapp_variables.gwappDirectory, gwapp_variables.gwappConf, gwapp_variables.gwappLogs, gwapp_variables.gwappTmp]
