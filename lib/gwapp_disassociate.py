@@ -6,21 +6,13 @@ __author__ = "Shane Nielson"
 __maintainer__ = "Shane Nielson"
 __email__ = "snielson@projectuminfinitas.com"
 
-import os
+# import os
 import sys
-import re
-import shutil
 import signal
 import traceback
 import logging, logging.config
 import gwapp_variables
 import gwapp_definitions as gw
-
-# Import requests as an alternative to urllib
-import requests
-# Hide requests warning (outdated python with GMS)
-import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
 
 # Log Settings
 logging.config.fileConfig('%s/logging.cfg' % (gwapp_variables.gwappConf))
@@ -40,10 +32,6 @@ class dissassociate:
 	def __init__(self):
 		self.urlList = []
 
-	def getURL(self, dom, post, type, id):
-		url = "/gwadmin-service/domains/%s/postoffices/%s/%s/%s/directorylink" % (dom, post, type, id)
-		return url
-
 	def printList(self):
 		for item in self.urlList:
 			print (item)
@@ -53,18 +41,48 @@ class dissassociate:
 
 	def disassociate(self, url):
 		r = gw.restDeleteRequest(gwapp_variables.login, url)
-		if r.status_code == '200':
+		if r.status_code == 204:
 			print ("Successfully disassociated %s" % url)
 			logger.info("Successfully disassociated %s" % url)
 		else:
 			print ("Failed to disassociated %s" % url)
 			logger.info("Failed to disassociated %s" % url)
 
-	def disassociateList(self, urlList):
-		failedList = []
-		for url in urlList:
-			self.disassociate(url)
-		self.urlList = [] # Clear list after trying to disassociate it
+	def disassociateList(self):
+		if self.getListCount() == 0:
+			print ("Nothing to disassociate")
+			logger.info("Nothing to disassociate")
+		else:
+			for url in self.urlList:
+				self.disassociate(url)
+			self.urlList = [] # Clear list after trying to disassociate it
+
+	def buildList(self, scope, types=[], id=None): 
+		"""
+		scope can be the following [system, dom, post, name, directory]
+		type can be a list of the following [user, group, resource]
+		id should be the name of the user, group, resource, post office, or domain
+		"""
+		urls = []
+		scopeList = {'system':"", 'dom':'domainName=', 'post':'postOfficeName=', 'name':'name=', 'directory':'directoryID='}
+
+		for type in types:
+			if id != None:
+				url = "/gwadmin-service/list/%s?%s%s&attrs=domain,postoffice,name" % (type, scopeList[scope], id)
+				logger.debug("URL: %s" % url)
+				urls.append(url)
+			else:
+				url = "/gwadmin-service/list/%s?attrs=domain,postoffice,name" % type
+				logger.debug("URL: %s" % url)
+				urls.append(url)
+
+		for url in urls:
+			r = gw.restGetRequest(gwapp_variables.login, url)
+			try:
+				for item in r.json()['object']:
+					self.urlList.append(item['@url'] +"/directorylink")
+			except KeyError:
+				pass
 
 
-	# TODO : Get URLs based on [system, domain, post office, name] for [system, user, group, resource]
+
