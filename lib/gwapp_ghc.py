@@ -78,11 +78,13 @@ def mainCheck(): # Main function to run all health checks
 	gw.getSystemList(gwapp_variables.login)
 	# List of checks to run..
 	check_postSecurity()
-	check_dvaConfigured()
-	check_gwhaFile()
-	check_poaAgentCSSSL()
 	check_poaAgentHttpSSL()
 	check_poaAgentMtpSSL()
+	check_poaAgentCSSSL()
+	check_poaAgentImapSSL()
+	check_poaAgentSoapSSL()
+	check_poaAgentSSLCert()
+	check_poaAgentSSLKey()
 	print();print() # Adds spacing after all checks
 
 
@@ -137,7 +139,7 @@ def check_poaAgentMtpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentCSSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] POA SSL Security settings..")
+	_util_NewHeader("Checking [System] POA Client/Server SSL Security settings..")
 	problem = 'passed'
 	poacsssl = gw.getPoaSettings('clientServerUsesSsl', 'Post Offices have been found with Client/Server SSL security DISABLED.')
 	with open(healthCheckLog, 'a') as log:
@@ -153,9 +155,9 @@ def check_poaAgentCSSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentImapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] Post Office SSL Security settings..")
+	_util_NewHeader("Checking [System] POA IMAP SSL Security settings..")
 	problem = 'passed'
-	poaimapssl = gw.getPoaSettings('mtpUsesSsl', 'Post Offices have been found with IMAP SSL security DISABLED.')
+	poaimapssl = gw.getPoaSettings('imapUsesSsl', 'Post Offices have been found with IMAP SSL security DISABLED.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poaimapssl:
 			if 'DISABLED' == poaimapssl[key]:
@@ -169,14 +171,14 @@ def check_poaAgentImapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentSoapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] Post Office SSL Security settings..")
+	_util_NewHeader("Checking [System] POA SOAP SSL Security settings..")
 	problem = 'passed'
-	poasoapssl = gw.getPoaSoapSSL()
+	poasoapssl = gw.getPoaSettings('soapUsesSsl', 'Post Offices have been found with SOAP SSL security DISABLED.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poasoapssl:
-			if 'disabled' in (' '.join(poasoapssl[key])).lower():
+			if 'DISABLED' == poasoapssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has SOAP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(poasoapssl[key])))
+			log.write("%s.%s has SOAP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poasoapssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with SOAP SSL security Disabled\n"
@@ -185,9 +187,9 @@ def check_poaAgentSoapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentSSLCert(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] Post Office SSL Certificate settings..")
+	_util_NewHeader("Checking [System] POA SSL Certificate file settings..")
 	problem = 'passed'
-	poasslcert = gw.getPoaSSLCert()
+	poasslcert = gw.getPoaSettings('sslCertificateFile', 'Post Offices have been found without a SSL Certificate.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poasslcert:
 			if None == poasslcert[key]:
@@ -201,14 +203,14 @@ def check_poaAgentSSLCert(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentSSLKey(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] Post Office SSL Certificate settings..")
+	_util_NewHeader("Checking [System] POA SSL Certificate key settings..")
 	problem = 'passed'
-	poasslkey = gw.getPoaSSLKey()
+	poasslkey = gw.getPoaSettings('sslKeyFile', 'Post Offices have been found without a SSL key.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poasslkey:
-			if 'Unable to find security setting' in (' '.join(poasslkey[key])).lower():
+			if None == poasslkey[key]:
 				problem = 'warning'
-			log.write("%s.%s has SSL key set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(poasslkey[key])))
+			log.write("%s.%s has a SSL key set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poasslkey[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found without a SSL key\n"

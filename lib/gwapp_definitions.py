@@ -475,14 +475,13 @@ def getMtaSettings(value, warning):
 	MtaSettings = dict()
 	getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
-		for dom in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/mta" % (dom)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				MtaSettings[dom] = (r.json()['object'][0][value])
-			except:
-				MtaSettings[dom] = None 
-				logger.warning(warning)
+		url = "/gwadmin-service/domains/%s/mta" % (dom)
+		r = restGetRequest(gwapp_variables.login, url)
+		try:
+			MtaSettings[dom] = (r.json()[value])
+		except:
+			MtaSettings[dom] = None 
+			logger.warning(warning)
 	return MtaSettings
 
 def getGwiaSettings(value, warning):
@@ -493,7 +492,7 @@ def getGwiaSettings(value, warning):
 			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
 			r = restGetRequest(gwapp_variables.login, url)
 			try:
-				GwiaSettings[gwia] = (r.json()['object'][0][value])
+				GwiaSettings[gwia] = (r.json()[value])
 			except:
 				GwiaSettings[gwia] = None 
 				logger.warning(warning)
