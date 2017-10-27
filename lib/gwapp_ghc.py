@@ -33,7 +33,7 @@ colorYELLOW = "\033[01;33m{0}\033[00m"
 colorBLUE = "\033[01;34m{0}\033[00m"
 
 # Printing Columns
-COL1 = "{0:40}"
+COL1 = "{0:62}"
 
 ###  Utility definitions for General Health Checks ###
 def _util_NewHeader(header):
@@ -80,13 +80,15 @@ def mainCheck(): # Main function to run all health checks
 	check_postSecurity()
 	check_dvaConfigured()
 	check_gwhaFile()
-
+	check_poaAgentCSSSL()
+	check_poaAgentHttpSSL()
+	check_poaAgentMtpSSL()
 	print();print() # Adds spacing after all checks
 
 
 
 def check_postSecurity():
-	_util_NewHeader("Checking [all] Post Office Security..")
+	_util_NewHeader("Checking [System] POA Security..")
 	problem = 'passed'
 	security = gw.getPostSecurity()
 	with open(healthCheckLog, 'a') as log:
@@ -102,14 +104,14 @@ def check_postSecurity():
 		_util_passFail(problem)
 
 def check_poaAgentHttpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] Post Office SSL Security settings..")
+	_util_NewHeader("Checking [System] POA HTTP SSL Security settings..")
 	problem = 'passed'
-	poahttpssl = gw.getPoaHttpSSL()
+	poahttpssl = gw.getPoaSettings('httpUsesSsl', 'Post Offices have been found with HTTP SSL security DISABLED.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poahttpssl:
-			if 'disabled' in (' '.join(poahttpssl[key])).lower():
+			if 'DISABLED' == poahttpssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has HTTP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(poahttpssl[key])))
+			log.write("%s.%s has HTTP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poahttpssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with HTTP SSL security Disabled\n"
@@ -119,14 +121,14 @@ def check_poaAgentHttpSSL(): # Set all Agents to Require SSL
 	# https://151.155.214.174:9710/gwadmin-service/domains/pkldom/postoffices/pklpo/poas
 
 def check_poaAgentMtpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] Post Office SSL Security settings..")
+	_util_NewHeader("Checking [System] POA MTP SSL Security settings..")
 	problem = 'passed'
-	poamtpssl = gw.getPoaMtpSSL()
+	poamtpssl = gw.getPoaSettings('mtpUsesSsl', 'Post Offices have been found with MTP SSL security DISABLED.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poamtpssl:
-			if 'disabled' in (' '.join(poamtpssl[key])).lower():
+			if 'DISABLED' == poamtpssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has MTP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(poamtpssl[key])))
+			log.write("%s.%s has MTP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poamtpssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with MTP SSL security Disabled\n"
@@ -135,14 +137,14 @@ def check_poaAgentMtpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentCSSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] Post Office SSL Security settings..")
+	_util_NewHeader("Checking [System] POA SSL Security settings..")
 	problem = 'passed'
-	poacsssl = gw.getPoaCSSSL()
+	poacsssl = gw.getPoaSettings('clientServerUsesSsl', 'Post Offices have been found with Client/Server SSL security DISABLED.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poacsssl:
-			if 'disabled' in (' '.join(poacsssl[key])).lower():
+			if 'DISABLED' == poacsssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has Client/Server SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(poacsssl[key])))
+			log.write("%s.%s has Client/Server SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poacsssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with Client/Server SSL security Disabled\n"
@@ -151,14 +153,14 @@ def check_poaAgentCSSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentImapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] Post Office SSL Security settings..")
+	_util_NewHeader("Checking [System] Post Office SSL Security settings..")
 	problem = 'passed'
-	poaimapssl = gw.getPoaImapSSL()
+	poaimapssl = gw.getPoaSettings('mtpUsesSsl', 'Post Offices have been found with IMAP SSL security DISABLED.')
 	with open(healthCheckLog, 'a') as log:
 		for key in poaimapssl:
-			if 'disabled' in (' '.join(poaimapssl[key])).lower():
+			if 'DISABLED' == poaimapssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has IMAP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(poaimapssl[key])))
+			log.write("%s.%s has IMAP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poaimapssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with IMAP SSL security Disabled\n"
@@ -167,7 +169,7 @@ def check_poaAgentImapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentSoapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] Post Office SSL Security settings..")
+	_util_NewHeader("Checking [System] Post Office SSL Security settings..")
 	problem = 'passed'
 	poasoapssl = gw.getPoaSoapSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -183,14 +185,14 @@ def check_poaAgentSoapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentSSLCert(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] Post Office SSL Certificate settings..")
+	_util_NewHeader("Checking [System] Post Office SSL Certificate settings..")
 	problem = 'passed'
 	poasslcert = gw.getPoaSSLCert()
 	with open(healthCheckLog, 'a') as log:
 		for key in poasslcert:
-			if 'Unable to find security setting' in (' '.join(poasslcert[key])).lower():
+			if None == poasslcert[key]:
 				problem = 'warning'
-			log.write("%s.%s has SSL Certificate set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(poasslcert[key])))
+			log.write("%s.%s has SSL Certificate set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poasslcert[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found without a SSL Certificate\n"
@@ -199,7 +201,7 @@ def check_poaAgentSSLCert(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_poaAgentSSLKey(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] Post Office SSL Certificate settings..")
+	_util_NewHeader("Checking [System] Post Office SSL Certificate settings..")
 	problem = 'passed'
 	poasslkey = gw.getPoaSSLKey()
 	with open(healthCheckLog, 'a') as log:
@@ -215,7 +217,7 @@ def check_poaAgentSSLKey(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_mtaAgentHttpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] MTA SSL Security settings..")
+	_util_NewHeader("Checking [System] MTA SSL Security settings..")
 	problem = 'passed'
 	mtahttpssl = gw.getMtaHttpSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -231,7 +233,7 @@ def check_mtaAgentHttpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_mtaAgentMtpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] MTA SSL Security settings..")
+	_util_NewHeader("Checking [System] MTA SSL Security settings..")
 	problem = 'passed'
 	mtamtpssl = gw.getMtaMtpSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -247,7 +249,7 @@ def check_mtaAgentMtpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_mtaAgentSSLCert(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] MTA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] MTA SSL Certificate settings..")
 	problem = 'passed'
 	mtasslcert = gw.getMtaSSLCert()
 	with open(healthCheckLog, 'a') as log:
@@ -263,7 +265,7 @@ def check_mtaAgentSSLCert(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_mtaAgentSSLKey(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] MTA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] MTA SSL Certificate settings..")
 	problem = 'passed'
 	mtasslkey = gw.getMtaSSLKey()
 	with open(healthCheckLog, 'a') as log:
@@ -279,7 +281,7 @@ def check_mtaAgentSSLKey(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_mtaAgentSSLKeyPassword(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] MTA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] MTA SSL Certificate settings..")
 	problem = 'passed'
 	mtasslkeypassword = gw.getMtaSSLKeyPassword()
 	with open(healthCheckLog, 'a') as log:
@@ -295,7 +297,7 @@ def check_mtaAgentSSLKeyPassword(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentHttpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
 	gwiahttpssl = gw.getGwiaHttpSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -311,7 +313,7 @@ def check_gwiaAgentHttpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentMtpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
 	gwiamtpssl = gw.getGwiaMtpSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -327,7 +329,7 @@ def check_gwiaAgentMtpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentImapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
 	gwiaimapssl = gw.getGwiaImapSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -343,7 +345,7 @@ def check_gwiaAgentImapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentLdapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
 	gwialdapssl = gw.getGwiaLdapSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -359,7 +361,7 @@ def check_gwiaAgentLdapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentPopSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
 	gwiapopssl = gw.getGwiaPopSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -375,7 +377,7 @@ def check_gwiaAgentPopSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentSmtpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
 	gwiasmtpssl = gw.getGwiaSmtpSSL()
 	with open(healthCheckLog, 'a') as log:
@@ -391,7 +393,7 @@ def check_gwiaAgentSmtpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentSSLCert(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Certificate settings..")
 	problem = 'passed'
 	gwiasslcert = gw.getGwiaSSLCert()
 	with open(healthCheckLog, 'a') as log:
@@ -407,7 +409,7 @@ def check_gwiaAgentSSLCert(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentSSLKey(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Certificate settings..")
 	problem = 'passed'
 	gwiasslkey = gw.getGwiaSSLKey()
 	with open(healthCheckLog, 'a') as log:
@@ -423,7 +425,7 @@ def check_gwiaAgentSSLKey(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentSSLKeyPassword(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [all] GWIA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Certificate settings..")
 	problem = 'passed'
 	gwiasslkeypassword = gw.getGwiaSSLKeyPassword()
 	with open(healthCheckLog, 'a') as log:
@@ -445,7 +447,7 @@ def check_agentOwner(): # Run agents as user other than root
 	pass
 
 def check_gwiaAccessControl(): # GWIA Access Control (No relay)
-	_util_NewHeader("Checking [all] GWIA relay settings..")
+	_util_NewHeader("Checking [System] GWIA relay settings..")
 	problem = 'passed'
 	gwiarelay = gw.getGwiaRelay()
 	with open(healthCheckLog, 'a') as log:
@@ -503,7 +505,7 @@ def check_Retention(): # Retention Plan and Software
 	pass
 
 def check_dvaConfigured():
-	_util_NewHeader("Checking [all] Post Office DVA..")
+	_util_NewHeader("Checking [System] Post Office DVA..")
 	problem = 'passed'
 	
 	with open(healthCheckLog, 'a') as log:
@@ -528,7 +530,7 @@ def check_dvaConfigured():
 		_util_passFail(problem, msg)
 
 def check_gwhaFile(): # Look for any duplicates in the gwha.conf file
-	_util_NewHeader("Checking [local] GWHA duplicates..")
+	_util_NewHeader("Checking [Server] GWHA duplicates..")
 	problem = 'passed'
 	agent = []
 	with open(gwapp_variables.gwhaFile, 'r') as gwha:

@@ -457,310 +457,44 @@ def getLocalAgents():
 def getFilePermission(file):
 	return stat.S_IMODE(os.stat(file).st_mode)
 
-def getPoaHttpSSL():
-	PoaHttpSSL = dict()
+def getPoaSettings(value, warning):
+	PoaSettings = dict()
 	getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		for post in gwapp_variables.domainSystem[dom]:
 			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
 			r = restGetRequest(gwapp_variables.login, url)
 			try:
-				PoaHttpSSL[post] = (r.json()['httpUsesSsl'])
-				logger.debug("Post Office [%s.%s] HTTP SSL set to %s" % (post, dom, r.json()['httpUsesSsl']))
+				PoaSettings[post] = (r.json()['object'][0][value])
 			except:
-				logger.warning("Unable to find security setting")
-	return PoaHttpSSL
+				PoaSettings[post] = None 
+				logger.warning(warning)
+	return PoaSettings
 
-def getPoaMtpSSL():
-	PoaMtpSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for post in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				PoaMtpSSL[post] = (r.json()['mtpUsesSsl'])
-				logger.debug("Post Office [%s.%s] MTP SSL set to %s" % (post, dom, r.json()['mtpUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return PoaMtpSSL
-
-def getPoaCSSSL():
-	PoaCSSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for post in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				PoaCSSSL[post] = (r.json()['clientServerUsesSsl'])
-				logger.debug("Post Office [%s.%s] Client/Server SSL set to %s" % (post, dom, r.json()['clientServerUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return PoaCSSSL
-
-def getPoaImapSSL():
-	PoaImapSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for post in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				PoaImapSSL[post] = (r.json()['imapUsesSsl'])
-				logger.debug("Post Office [%s.%s] IMAP SSL set to %s" % (post, dom, r.json()['imapUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return PoaImapSSL
-
-def getPoaSoapSSL():
-	PoaSoapSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for post in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				PoaSoapSSL[post] = (r.json()['soapUsesSsl'])
-				logger.debug("Post Office [%s.%s] Client/Server SSL set to %s" % (post, dom, r.json()['soapUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return PoaSoapSSL
-
-def getPoaSSLCert():
-	PoaSSLCert = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for post in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				PoaSSLCert[post] = (r.json()['sslCertificateFile'])
-				logger.debug("Post Office [%s.%s] SSL certificate set to %s" % (post, dom, r.json()['sslCertificateFile']))
-			except:
-				logger.warning("Unable to find security setting")
-	return PoaSSLCert
-
-def getPoaSSLKey():
-	PoaSSLKey = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for post in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				PoaSSLKey[post] = (r.json()['sslKeyFile'])
-				logger.debug("Post Office [%s.%s] SSL key set to %s" % (post, dom, r.json()['sslKeyFile']))
-			except:
-				logger.warning("Unable to find security setting")
-	return PoaSSLKey
-
-def getMtaHttpSSL():
-	MtaHttpSSL = dict()
+def getMtaSettings(value, warning):
+	MtaSettings = dict()
 	getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		for dom in gwapp_variables.domainSystem[dom]:
 			url = "/gwadmin-service/domains/%s/mta" % (dom)
 			r = restGetRequest(gwapp_variables.login, url)
 			try:
-				MtaHttpSSL[dom] = (r.json()['httpUsesSsl'])
-				logger.debug("MTA [%s] HTTP SSL set to %s" % (dom, r.json()['httpUsesSsl']))
+				MtaSettings[dom] = (r.json()['object'][0][value])
 			except:
-				logger.warning("Unable to find security setting")
-	return MtaHttpSSL
+				MtaSettings[dom] = None 
+				logger.warning(warning)
+	return MtaSettings
 
-def getMtaMtpSSL():
-	MtaMtpSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for dom in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/mta" % (dom)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				MtaMtpSSL[dom] = (r.json()['mtpUsesSsl'])
-				logger.debug("MTA [%s] MTP SSL set to %s" % (dom, r.json()['mtpUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return MtaMtpSSL
-
-def getMtaSSLCert():
-	MtaSSLCert = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for dom in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/mta" % (dom)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				MtaSSLCert[dom] = (r.json()['sslCertificateFile'])
-				logger.debug("MTA [%s] SSL certificate set to %s" % (dom, r.json()['sslCertificateFile']))
-			except:
-				logger.warning("Unable to find security setting")
-	return MtaSSLCert
-
-def getMtaSSLKey():
-	MtaSSLKey = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for dom in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/mta" % (dom)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				MtaSSLKey[dom] = (r.json()['sslKeyFile'])
-				logger.debug("MTA [%s] SSL key set to %s" % (dom, r.json()['sslKeyFile']))
-			except:
-				logger.warning("Unable to find security setting")
-	return MtaSSLKey
-
-def getMtaSSLKeyPassword():
-	MtaSSLKeyPassword = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for dom in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/mta" % (dom)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				MtaSSLKeyPassword[dom] = (r.json()['hasSslKeyPassword'])
-				logger.debug("MTA [%s] SSL key has a set password: %s" % (dom, r.json()['hasSslKeyPassword']))
-			except:
-				logger.warning("Unable to find security setting")
-	return MtaSSLKeyPassword
-
-def getGwiaHttpSSL():
-	GwiaHttpSSL = dict()
+def getGwiaSettings(value, warning):
+	GwiaSettings = dict()
 	getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		for gwia in gwapp_variables.domainSystem[dom]:
 			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
 			r = restGetRequest(gwapp_variables.login, url)
 			try:
-				GwiaHttpSSL[gwia] = (r.json()['httpUsesSsl'])
-				logger.debug("GWIA [%s.%s] HTTP SSL set to %s" % (gwia, dom, r.json()['httpUsesSsl']))
+				GwiaSettings[gwia] = (r.json()['object'][0][value])
 			except:
-				logger.warning("Unable to find security setting")
-	return GwiaHttpSSL
-
-def getGwiaMtpSSL():
-	GwiaMtpSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaMtpSSL[gwia] = (r.json()['mtpUsesSsl'])
-				logger.debug("GWIA [%s.%s] HTTP SSL set to %s" % (gwia, dom, r.json()['mtpUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaMtpSSL
-
-def getGwiaImapSSL():
-	GwiaImapSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaImapSSL[gwia] = (r.json()['imapUsesSsl'])
-				logger.debug("GWIA [%s.%s] HTTP SSL set to %s" % (gwia, dom, r.json()['imapUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaImapSSL
-
-def getGwiaLdapSSL():
-	GwiaLdapSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaLdapSSL[gwia] = (r.json()['ldapUsesSsl'])
-				logger.debug("GWIA [%s.%s] LDAP SSL set to %s" % (gwia, dom, r.json()['ldapUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaLdapSSL
-
-def getGwiaPopSSL():
-	GwiaPopSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaPopSSL[gwia] = (r.json()['popUsesSsl'])
-				logger.debug("GWIA [%s.%s] POP3 SSL set to %s" % (gwia, dom, r.json()['popUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaPopSSL
-
-def getGwiaSmtpSSL():
-	GwiaSmtpSSL = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaSmtpSSL[gwia] = (r.json()['smtpUsesSsl'])
-				logger.debug("GWIA [%s.%s] SMTP SSL set to %s" % (gwia, dom, r.json()['smtpUsesSsl']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaSmtpSSL
-
-def getGwiaSSLCert():
-	GwiaSSLCert = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaSSLCert[gwia] = (r.json()['sslCertificateFile'])
-				logger.debug("GWIA [%s.%s] SSL certificate set to %s" % (gwia, dom, r.json()['sslCertificateFile']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaSSLCert
-
-def getGwiaSSLKey():
-	GwiaSSLKey = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaSSLKey[gwia] = (r.json()['sslKeyFile'])
-				logger.debug("GWIA [%s.%s] SSL key set to %s" % (gwia, dom, r.json()['sslKeyFile']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaSSLKey
-
-def getGwiaSSLKeyPassword():
-	GwiaSSLKeyPassword = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaSSLKeyPassword[gwia] = (r.json()['hasSslKeyPassword'])
-				logger.debug("GWIA [%s.%s] SSL key set to %s" % (gwia, dom, r.json()['hasSslKeyPassword']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaSSLKeyPassword
-
-def getGwiaRelay():
-	GwiaRelay = dict()
-	getSystemList(gwapp_variables.login)
-	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaRelay[gwia] = (r.json()['smtpMessageRelayAllow'])
-				logger.debug("GWIA [%s.%s] SMTP relay set to %s" % (gwia, dom, r.json()['smtpMessageRelayAllow']))
-			except:
-				logger.warning("Unable to find security setting")
-	return GwiaRelay
+				GwiaSettings[gwia] = None 
+				logger.warning(warning)
+	return GwiaSettings
