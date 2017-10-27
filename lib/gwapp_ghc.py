@@ -3,6 +3,7 @@ from __future__ import print_function
 import sys
 import traceback
 import datetime
+import json
 import logging, logging.config
 import gwapp_definitions as gw
 import gwapp_variables
@@ -76,10 +77,12 @@ def mainCheck(): # Main function to run all health checks
 
 	# Get current system list
 	gw.getSystemList(gwapp_variables.login)
+
 	# List of checks to run..
 	check_postSecurity()
 	check_dvaConfigured()
 	check_gwhaFile()
+
 
 	print();print() # Adds spacing after all checks
 

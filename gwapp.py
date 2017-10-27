@@ -157,13 +157,8 @@ gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 
 DEBUG_ENABLED = True
 if DEBUG_ENABLED:
-	# import gwapp_ghc as ghc
-	# ghc.mainCheck()
-	import gwapp_disassociate as dis
-	d = dis.dissassociate()
-	d.buildList('directory', ['user'], 'eDirectory')
-	d.printList()
-
+	import gwapp_ghc as ghc
+	ghc.mainCheck()
 
 	gw.eContinue()
 	sys.exit(0)

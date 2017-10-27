@@ -6,7 +6,6 @@ __author__ = "Shane Nielson"
 __maintainer__ = "Shane Nielson"
 __email__ = "snielson@projectuminfinitas.com"
 
-# import os
 import sys
 import signal
 import traceback
