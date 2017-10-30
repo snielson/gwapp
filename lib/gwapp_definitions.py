@@ -276,15 +276,26 @@ def checkLoginInfo(login):
 		return False
 	return True
 
-def restGetRequest(login, urlPath):
+def restGetRequest(login, urlPath, healthCheck=False):
 	r = None
-	try:
-		r = requests.get(login['url'] + urlPath, auth=(login['admin'],login['pass']), verify=False, headers={"Accept":"application/json"})
-		logger.debug("GET request URL: %s" % login['url'] + urlPath)
-		logger.info("Status code: %s" % r.status_code)
-	except:
-		pass
-	return r
+	if healthCheck:
+		if urlPath not in gwapp_variables.restDATA:
+			r = requests.get(login['url'] + urlPath, auth=(login['admin'],login['pass']), verify=False, headers={"Accept":"application/json"})
+			logger.debug("GET request URL: %s" % login['url'] + urlPath)
+			logger.info("Status code: %s" % r.status_code)
+			logger.debug("Adding new key [%s]" % urlPath)
+			gwapp_variables.restDATA[urlPath] = r
+		else:
+			logger.debug("Key [%s] found, returning JSON" % urlPath)
+		return gwapp_variables.restDATA[urlPath]
+	else:
+		try:
+			r = requests.get(login['url'] + urlPath, auth=(login['admin'],login['pass']), verify=False, headers={"Accept":"application/json"})
+			logger.debug("GET request URL: %s" % login['url'] + urlPath)
+			logger.info("Status code: %s" % r.status_code)
+		except:
+			pass
+		return r
 
 def restPostRequest(login, urlPath, data, header):
 	r = None
@@ -337,19 +348,33 @@ def getPostOffices(login, domain):
 		pass
 	return postoffices
 
-def getGWIA(login, domain):
+def getGWIAs(login, domain):
 	# Gets gwia in JSON. Loop through data, and pull names into list
 	gwias = []
 	url = "/gwadmin-service/domains/%s/gwias" % domain
-	logger.info("Building list of post offices..")
+	logger.info("Building list of gwias..")
 	r = restGetRequest(login, url)
 	try:
 		for objects in r.json()['object']:
 			gwias.append(objects['name'])
-			logger.debug("Appending post office to list: %s" % objects['name'])
+			logger.debug("Appending gwia to list: %s" % objects['name'])
 	except KeyError: # KeyError if domain has no gwia
 		pass
 	return gwias
+
+def getPOAs(login, domain, postoffice):
+	# Gets POAs in JSON. Loop through data, and pull names into list
+	poas = []
+	url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (domain, postoffice)
+	logger.info("Building list of post office agents..")
+	r = restGetRequest(login, url)
+	try:
+		for objects in r.json()['object']:
+			poas.append(objects['name'])
+			logger.debug("Appending post office agent to list: %s" % objects['name'])
+	except KeyError: # KeyError if domain has no POA
+		pass
+	return poas
 
 def getSystemList(login):
 	gwapp_variables.initSystem()
@@ -365,8 +390,14 @@ def getSystemList(login):
 			gwapp_variables.postofficeSystem[postoffice] = domain
 			logger.debug("Creating postofficeSystem key: %s" % postoffices)
 			logger.debug("Adding value: %s" % domain)
+			# Create POA dictonary
+			poas = getPOAs(login, domain, postoffice)
+			gwapp_variables.POASystem[postoffice] = poas
+			logger.debug("Creating POASystem key: %s" % postoffice)
+			logger.debug("Adding value: %s" % poas)
 
-		gwias = getGWIA(login, domain)
+		# Create GWIAs dictonary
+		gwias = getGWIAs(login, domain)
 		for gwia in gwias:
 			gwapp_variables.gwiaSystem[gwia] = domain
 			logger.debug("Creating gwiaSystem key: %s" % gwia)
@@ -413,20 +444,6 @@ def checkTrustedApp(login, appName, delete=False):
 	logger.info("Trusted application found")
 	return True
 
-def getPostSecurity():
-    postofficeSecurity = dict()
-    getSystemList(gwapp_variables.login)
-    for dom in gwapp_variables.domainSystem:
-        for post in gwapp_variables.domainSystem[dom]:
-            url = "/gwadmin-service/domains/%s/postoffices/%s" % (dom, post)
-            r = restGetRequest(gwapp_variables.login, url)
-            try:
-                postofficeSecurity[post] = (r.json()['securitySettings'])
-                logger.debug("Post Office [%s.%s] security set to %s" % (post, dom, r.json()['securitySettings']))
-            except:
-                logger.warning("Unable to find security setting")
-    return postofficeSecurity
-
 def getPOLogPath(dom, post):
 	logFilePath = dict()
 	url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
@@ -457,23 +474,44 @@ def getLocalAgents():
 def getFilePermission(file):
 	return stat.S_IMODE(os.stat(file).st_mode)
 
-def getPoaSettings(value, warning):
+def getPostSetting(value, warning, debug=False, healthCheck=False):
+    postSettings = dict()
+    if not healthCheck:
+	    getSystemList(gwapp_variables.login)
+    for dom in gwapp_variables.domainSystem:
+        for post in gwapp_variables.domainSystem[dom]:
+            url = "/gwadmin-service/domains/%s/postoffices/%s" % (dom, post)
+            r = restGetRequest(gwapp_variables.login, url, healthCheck)
+            try:
+                postSettings[post] = (r.json()[value])
+                if debug:
+	                logger.debug("Post Office [%s.%s] %s set to %s" % (post, dom, value, r.json()[value]))
+            except:
+                logger.warning(warning)
+    return postSettings
+
+def getPoaSettings(value, warning, debug=False, healthCheck=False):
 	PoaSettings = dict()
-	getSystemList(gwapp_variables.login)
+	if not healthCheck:
+		getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		for post in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				PoaSettings[post] = (r.json()['object'][0][value])
-			except:
-				PoaSettings[post] = None 
-				logger.warning(warning)
+			for poa in gwapp_variables.POASystem[post]:
+				url = "/gwadmin-service/domains/%s/postoffices/%s/poas/%s" % (dom, post, poa)
+				r = restGetRequest(gwapp_variables.login, url, healthCheck)
+				try:
+					PoaSettings["%s.%s.%s" % (poa,post,dom)] = (r.json()[value])
+					if debug:
+						logger.debug("POA [%s.%s.%s] %s set to %s" % (poa, post, dom, value, r.json()[value]))
+				except:
+					PoaSettings["%s.%s.%s" % (poa,post,dom)] = None 
+					logger.warning(warning)
 	return PoaSettings
 
 def getMtaSettings(value, warning):
 	MtaSettings = dict()
-	getSystemList(gwapp_variables.login)
+	if not healthCheck:
+		getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		url = "/gwadmin-service/domains/%s/mta" % (dom)
 		r = restGetRequest(gwapp_variables.login, url)
@@ -486,7 +524,8 @@ def getMtaSettings(value, warning):
 
 def getGwiaSettings(value, warning):
 	GwiaSettings = dict()
-	getSystemList(gwapp_variables.login)
+	if not healthCheck:
+		getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		for gwia in gwapp_variables.domainSystem[dom]:
 			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)

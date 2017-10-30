@@ -37,10 +37,16 @@ def initSystem():
 	global gwiaSystem
 	global domainSystem
 	global postofficeSystem
+	global POASystem
 	gwiaSystem = dict()
 	domainSystem = dict()
 	postofficeSystem = dict()
+	POASystem = dict()
 
 def setOSFiles():
 	global gwhaFile
 	gwhaFile = "/etc/opt/novell/groupwise/gwha.conf"
+
+def initRESTData():
+	global restDATA
+	restDATA = dict()
