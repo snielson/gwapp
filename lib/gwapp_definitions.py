@@ -456,3 +456,44 @@ def getLocalAgents():
 
 def getFilePermission(file):
 	return stat.S_IMODE(os.stat(file).st_mode)
+
+def getPoaSettings(value, warning):
+	PoaSettings = dict()
+	getSystemList(gwapp_variables.login)
+	for dom in gwapp_variables.domainSystem:
+		for post in gwapp_variables.domainSystem[dom]:
+			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (dom, post)
+			r = restGetRequest(gwapp_variables.login, url)
+			try:
+				PoaSettings[post] = (r.json()['object'][0][value])
+			except:
+				PoaSettings[post] = None 
+				logger.warning(warning)
+	return PoaSettings
+
+def getMtaSettings(value, warning):
+	MtaSettings = dict()
+	getSystemList(gwapp_variables.login)
+	for dom in gwapp_variables.domainSystem:
+		url = "/gwadmin-service/domains/%s/mta" % (dom)
+		r = restGetRequest(gwapp_variables.login, url)
+		try:
+			MtaSettings[dom] = (r.json()[value])
+		except:
+			MtaSettings[dom] = None 
+			logger.warning(warning)
+	return MtaSettings
+
+def getGwiaSettings(value, warning):
+	GwiaSettings = dict()
+	getSystemList(gwapp_variables.login)
+	for dom in gwapp_variables.domainSystem:
+		for gwia in gwapp_variables.domainSystem[dom]:
+			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
+			r = restGetRequest(gwapp_variables.login, url)
+			try:
+				GwiaSettings[gwia] = (r.json()[value])
+			except:
+				GwiaSettings[gwia] = None 
+				logger.warning(warning)
+	return GwiaSettings
