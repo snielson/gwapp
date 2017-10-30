@@ -9,7 +9,6 @@ import gwapp_definitions as gw
 import gwapp_variables
 # import commands
 
-
 # Global variables
 healthCheckLog = gwapp_variables.gwappLogs + '/healthCheck.log'
 
@@ -34,7 +33,7 @@ colorYELLOW = "\033[01;33m{0}\033[00m"
 colorBLUE = "\033[01;34m{0}\033[00m"
 
 # Printing Columns
-COL1 = "{0:62}"
+COL1 = "{0:70}"
 
 ###  Utility definitions for General Health Checks ###
 def _util_NewHeader(header):
@@ -65,23 +64,19 @@ def _util_passFail(result, msg=None): # Prints to screen Passed,Failed, Warning,
 
 
 def mainCheck(): # Main function to run all health checks
-
-	# TODO: clear screen, or use banner?
-	# gw.clear()
 	gw.gwappBanner(gwapp_variables.gwappversion)
+	# Get current system list
+	gw.getSystemList(gwapp_variables.login)
 
 	with open(healthCheckLog, 'w') as log:
 		log.write("##########################################################\n#  General Health Check\n##########################################################\n")
 		log.write("Gathered by gwapp v%s on %s\n\n" % (gwapp_variables.gwappversion, datetime.datetime.now().strftime('%c')))
 	logger.info("Starting General Health Check..")
 
-	# Get current system list
-	gw.getSystemList(gwapp_variables.login)
-
 	# List of checks to run..
+	# Server checks
 	check_postSecurity()
 	check_dvaConfigured()
-	check_gwhaFile()
 	check_poaAgentHttpSSL()
 	check_poaAgentMtpSSL()
 	check_poaAgentCSSSL()
@@ -90,14 +85,18 @@ def mainCheck(): # Main function to run all health checks
 	check_poaAgentSSLCert()
 	check_poaAgentSSLKey()
 
+	# Server checks
+	check_gwhaFile()
+
+	gwapp_variables.restDATA.clear()
 	print();print() # Adds spacing after all checks
 
 
-
 def check_postSecurity():
-	_util_NewHeader("Checking [System] POA Security..")
+	_util_NewHeader("Checking [System] Post Office Security..")
 	problem = 'passed'
-	security = gw.getPostSecurity()
+	# security = gw.getPostSecurity(healthCheck=True)
+	security = gw.getPostSetting('securitySettings', 'Post Offices have been found with low security', debug=True, healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in security:
 			if 'low' in (' '.join(security[key])).lower():
@@ -113,12 +112,12 @@ def check_postSecurity():
 def check_poaAgentHttpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA HTTP SSL Security settings..")
 	problem = 'passed'
-	poahttpssl = gw.getPoaSettings('httpUsesSsl', 'Post Offices have been found with HTTP SSL security DISABLED.')
+	poahttpssl = gw.getPoaSettings('httpUsesSsl', 'Post Offices have been found with HTTP SSL security DISABLED')
 	with open(healthCheckLog, 'a') as log:
 		for key in poahttpssl:
 			if 'DISABLED' == poahttpssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has HTTP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poahttpssl[key]))
+			log.write("%s has HTTP SSL set to: %s \n" % (key, poahttpssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with HTTP SSL security Disabled\n"
@@ -130,12 +129,12 @@ def check_poaAgentHttpSSL(): # Set all Agents to Require SSL
 def check_poaAgentMtpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA MTP SSL Security settings..")
 	problem = 'passed'
-	poamtpssl = gw.getPoaSettings('mtpUsesSsl', 'Post Offices have been found with MTP SSL security DISABLED.')
+	poamtpssl = gw.getPoaSettings('mtpUsesSsl', 'Post Offices have been found with MTP SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in poamtpssl:
 			if 'DISABLED' == poamtpssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has MTP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poamtpssl[key]))
+			log.write("%s has MTP SSL set to: %s \n" % (key, poamtpssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with MTP SSL security Disabled\n"
@@ -146,12 +145,12 @@ def check_poaAgentMtpSSL(): # Set all Agents to Require SSL
 def check_poaAgentCSSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA Client/Server SSL Security settings..")
 	problem = 'passed'
-	poacsssl = gw.getPoaSettings('clientServerUsesSsl', 'Post Offices have been found with Client/Server SSL security DISABLED.')
+	poacsssl = gw.getPoaSettings('clientServerUsesSsl', 'Post Offices have been found with Client/Server SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in poacsssl:
 			if 'DISABLED' == poacsssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has Client/Server SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poacsssl[key]))
+			log.write("%s has Client/Server SSL set to: %s \n" % (key, poacsssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with Client/Server SSL security Disabled\n"
@@ -162,12 +161,12 @@ def check_poaAgentCSSSL(): # Set all Agents to Require SSL
 def check_poaAgentImapSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA IMAP SSL Security settings..")
 	problem = 'passed'
-	poaimapssl = gw.getPoaSettings('imapUsesSsl', 'Post Offices have been found with IMAP SSL security DISABLED.')
+	poaimapssl = gw.getPoaSettings('imapUsesSsl', 'Post Offices have been found with IMAP SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in poaimapssl:
 			if 'DISABLED' == poaimapssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has IMAP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poaimapssl[key]))
+			log.write("%s has IMAP SSL set to: %s \n" % (key, poaimapssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with IMAP SSL security Disabled\n"
@@ -178,12 +177,12 @@ def check_poaAgentImapSSL(): # Set all Agents to Require SSL
 def check_poaAgentSoapSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA SOAP SSL Security settings..")
 	problem = 'passed'
-	poasoapssl = gw.getPoaSettings('soapUsesSsl', 'Post Offices have been found with SOAP SSL security DISABLED.')
+	poasoapssl = gw.getPoaSettings('soapUsesSsl', 'Post Offices have been found with SOAP SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in poasoapssl:
 			if 'DISABLED' == poasoapssl[key]:
 				problem = 'warning'
-			log.write("%s.%s has SOAP SSL set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poasoapssl[key]))
+			log.write("%s has SOAP SSL set to: %s \n" % (key, poasoapssl[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found with SOAP SSL security Disabled\n"
@@ -194,12 +193,12 @@ def check_poaAgentSoapSSL(): # Set all Agents to Require SSL
 def check_poaAgentSSLCert(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA SSL Certificate file settings..")
 	problem = 'passed'
-	poasslcert = gw.getPoaSettings('sslCertificateFile', 'Post Offices have been found without a SSL Certificate.')
+	poasslcert = gw.getPoaSettings('sslCertificateFile', 'Post Offices have been found without a SSL Certificate', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in poasslcert:
 			if None == poasslcert[key]:
 				problem = 'warning'
-			log.write("%s.%s has SSL Certificate set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poasslcert[key]))
+			log.write("%s has SSL Certificate set to: %s \n" % (key, poasslcert[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found without a SSL Certificate\n"
@@ -210,12 +209,12 @@ def check_poaAgentSSLCert(): # Set all Agents to Require SSL
 def check_poaAgentSSLKey(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA SSL Certificate key settings..")
 	problem = 'passed'
-	poasslkey = gw.getPoaSettings('sslKeyFile', 'Post Offices have been found without a SSL key.')
+	poasslkey = gw.getPoaSettings('sslKeyFile', 'Post Offices have been found without a SSL key', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in poasslkey:
 			if None == poasslkey[key]:
 				problem = 'warning'
-			log.write("%s.%s has a SSL key set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], poasslkey[key]))
+			log.write("%s has a SSL key set to: %s \n" % (key, poasslkey[key]))
 
 	if problem == 'warning':
 		msg = "\nPost Offices have been found without a SSL key\n"
@@ -481,7 +480,7 @@ def check_diskSpace(): # Disk Space on Post Office Servers
 def check_poaErrorLog(): # Error Check on all POA logs
 	for dom in gwapp_variables.domainSystem:
 		for post in gwapp_variables.domainSystem[dom]:
-			logpath = gw.getPOLogPath(dom, post)
+			logpath = gw.getPOLogPath(dom, post, healthCheck=True) # TODO: Switch this over to use gw.getPoaSettings()
 			if logpath[post] != None:
 				log = "%s/poa.currentlog" % logpath[post].rstrip('/')
 			else:
@@ -512,29 +511,45 @@ def check_Retention(): # Retention Plan and Software
 	pass
 
 def check_dvaConfigured():
-	_util_NewHeader("Checking [System] Post Office DVA..")
+	_util_NewHeader("Checking [System] POA DVA..")
 	problem = 'passed'
-	
+	results = gw.getPoaSettings('dvaName1', 'POA has not been DVA configured', debug=True, healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
-		# Check post office for DVA
-		for post in gwapp_variables.postofficeSystem:
-			DVA = None
-			url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (gwapp_variables.postofficeSystem[post], post)
-			r = gw.restGetRequest(gwapp_variables.login, url)
-			try:
-				DVA = (r.json()['object'][0]['dvaName1'])
-			except:
-				pass
-
-			if DVA is None:
-				log.write("%s.%s has no DVA configured\n" % (post, gwapp_variables.postofficeSystem[post]))
+		for key in results:
+			if None == results[key]:
 				problem = 'failed'
+				log.write("%s has no DVA configured\n" % key)
 
 	if problem == 'failed':
 		_util_passFail(problem)
 	else:
 		msg = "Every Post Office has DVA configured\n"
 		_util_passFail(problem, msg)
+
+
+	# _util_NewHeader("Checking [System] Post Office DVA..")
+	# problem = 'passed'
+	
+	# with open(healthCheckLog, 'a') as log:
+	# 	# Check post office for DVA
+	# 	for post in gwapp_variables.postofficeSystem:
+	# 		DVA = None
+	# 		url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (gwapp_variables.postofficeSystem[post], post)
+	# 		r = gw.restGetRequest(gwapp_variables.login, url)
+	# 		try:
+	# 			DVA = (r.json()['object'][0]['dvaName1'])
+	# 		except:
+	# 			pass
+
+	# 		if DVA is None:
+	# 			log.write("%s.%s has no DVA configured\n" % (post, gwapp_variables.postofficeSystem[post]))
+	# 			problem = 'failed'
+
+	# if problem == 'failed':
+	# 	_util_passFail(problem)
+	# else:
+	# 	msg = "Every Post Office has DVA configured\n"
+	# 	_util_passFail(problem, msg)
 
 def check_gwhaFile(): # Look for any duplicates in the gwha.conf file
 	_util_NewHeader("Checking [Server] GWHA duplicates..")

@@ -16,6 +16,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/lib')
 import gwapp_variables
 gwapp_variables.initVersion()
 gwapp_variables.setOSFiles()
+gwapp_variables.initRESTData()
 
 ##################################################################################################
 #	Start up check
@@ -158,7 +159,7 @@ gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 DEBUG_ENABLED = True
 if DEBUG_ENABLED:
 	import gwapp_ghc as ghc
-	print gw.getMtaSettings('httpUsesSsl','')
+	ghc.mainCheck()
 
 	gw.eContinue()
 	sys.exit(0)
