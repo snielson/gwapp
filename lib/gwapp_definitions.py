@@ -31,7 +31,7 @@ requests.packages.urllib3.disable_warnings()
 
 # GLOBAL VARIABLES
 import gwapp_variables
-gwapp_variables.setGlobalVariables()
+# gwapp_variables.setGlobalVariables()
 
 if sys.stdout.isatty():
 	WINDOW_SIZE = rows, columns = os.popen('stty size', 'r').read().split()
