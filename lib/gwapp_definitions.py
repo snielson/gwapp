@@ -398,10 +398,9 @@ def getSystemList(login):
 
 		# Create GWIAs dictonary
 		gwias = getGWIAs(login, domain)
-		for gwia in gwias:
-			gwapp_variables.gwiaSystem[gwia] = domain
-			logger.debug("Creating gwiaSystem key: %s" % gwia)
-			logger.debug("Adding value: %s" % domain)
+		gwapp_variables.gwiaSystem[domain] = gwias
+		logger.debug("Creating gwiaSystem key: %s" % domain)
+		logger.debug("Adding value: %s" % gwias)
 
 def createTrustedApp(login, appName='gwapp', delete=False):
 	if not checkTrustedApp(login, appName, delete=delete):
@@ -508,7 +507,7 @@ def getPoaSettings(value, warning, debug=False, healthCheck=False):
 					logger.warning(warning)
 	return PoaSettings
 
-def getMtaSettings(value, warning):
+def getMtaSettings(value, warning, debug=False, healthCheck=False):
 	MtaSettings = dict()
 	if not healthCheck:
 		getSystemList(gwapp_variables.login)
@@ -522,17 +521,20 @@ def getMtaSettings(value, warning):
 			logger.warning(warning)
 	return MtaSettings
 
-def getGwiaSettings(value, warning):
+def getGwiaSettings(value, warning, debug=False, healthCheck=False):
 	GwiaSettings = dict()
 	if not healthCheck:
 		getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
-		for gwia in gwapp_variables.domainSystem[dom]:
-			url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-			r = restGetRequest(gwapp_variables.login, url)
-			try:
-				GwiaSettings[gwia] = (r.json()[value])
-			except:
-				GwiaSettings[gwia] = None 
-				logger.warning(warning)
+		try:
+			for gwia in gwapp_variables.gwiaSystem[dom]:
+				url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
+				r = restGetRequest(gwapp_variables.login, url)
+				try:
+					GwiaSettings[gwia] = (r.json()[value])
+				except:
+					GwiaSettings[gwia] = None 
+					logger.warning(warning)
+		except KeyError:
+			pass
 	return GwiaSettings

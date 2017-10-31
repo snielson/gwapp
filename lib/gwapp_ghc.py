@@ -84,6 +84,25 @@ def mainCheck(): # Main function to run all health checks
 	check_poaAgentSoapSSL()
 	check_poaAgentSSLCert()
 	check_poaAgentSSLKey()
+	check_mtaAgentHttpSSL()
+	check_mtaAgentMtpSSL()
+	check_mtaAgentSSLCert()
+	check_mtaAgentSSLKey()
+	check_mtaAgentSSLKeyPassword()
+	check_gwiaAgentHttpSSL()
+	check_gwiaAgentMtpSSL()
+	check_gwiaAgentImapSSL()
+	check_gwiaAgentLdapSSL()
+	check_gwiaAgentPopSSL()
+	check_gwiaAgentSmtpSSL()
+	check_gwiaAgentSSLCert()
+	check_gwiaAgentSSLKey()
+	check_gwiaAgentSSLKeyPassword()
+	check_gwiaAccessControl()
+	check_gwiaSendThreads()
+	check_gwiaReceiveThreads()
+	check_poaThreads()
+	check_gwiaimapSettings()
 
 	# Server checks
 	check_gwhaFile()
@@ -223,17 +242,17 @@ def check_poaAgentSSLKey(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_mtaAgentHttpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] MTA SSL Security settings..")
+	_util_NewHeader("Checking [System] MTA HTTP SSL Security settings..")
 	problem = 'passed'
-	mtahttpssl = gw.getMtaHttpSSL()
+	mtahttpssl = gw.getMtaSettings('httpUsesSsl', 'Message Transfer Agents have been found with HTTP SSL security DISABLED')
 	with open(healthCheckLog, 'a') as log:
 		for key in mtahttpssl:
-			if 'disabled' in (' '.join(mtahttpssl[key])).lower():
+			if 'DISABLED' == mtahttpssl[key]:
 				problem = 'warning'
-			log.write("%s has HTTP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(mtahttpssl[key])))
+			log.write("%s has HTTP SSL set to: %s \n" % (key, mtahttpssl[key]))
 
 	if problem == 'warning':
-		msg = "\nMTAs have been found with HTTP SSL security Disabled\n"
+		msg = "\nMessage Transfer Agents have been found with HTTP SSL security DISABLED\n"
 		_util_passFail(problem, msg)
 	else:
 		_util_passFail(problem)
@@ -241,92 +260,92 @@ def check_mtaAgentHttpSSL(): # Set all Agents to Require SSL
 def check_mtaAgentMtpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] MTA SSL Security settings..")
 	problem = 'passed'
-	mtamtpssl = gw.getMtaMtpSSL()
+	mtamtpssl = gw.getMtaSettings('mtpUsesSsl', 'Message Transfer Agents have been found with MTP SSL security DISABLED')
 	with open(healthCheckLog, 'a') as log:
 		for key in mtamtpssl:
-			if 'disabled' in (' '.join(mtamtpssl[key])).lower():
+			if 'DISABLED' == mtamtpssl[key]:
 				problem = 'warning'
-			log.write("%s has MTP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(mtamtpssl[key])))
+			log.write("%s has MTP SSL set to: %s \n" % (key, mtamtpssl[key]))
 
 	if problem == 'warning':
-		msg = "\nMTAs have been found with MTP SSL security Disabled\n"
+		msg = "\nMessage Transfer Agents have been found with MTP SSL security DISABLED\n"
 		_util_passFail(problem, msg)
 	else:
 		_util_passFail(problem)
 
 def check_mtaAgentSSLCert(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] MTA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] MTA SSL Certificate file settings..")
 	problem = 'passed'
-	mtasslcert = gw.getMtaSSLCert()
+	mtasslcert = gw.getMtaSettings('sslCertificateFile', 'Message Transfer Agents have been found without a SSL Certificate', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in mtasslcert:
-			if 'Unable to find security setting' in (' '.join(mtasslcert[key])).lower():
+			if None == mtasslcert[key]:
 				problem = 'warning'
-			log.write("%s has MTP SSL Certificate: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(mtasslcert[key])))
+			log.write("%s has SSL Certificate set to: %s \n" % (key, mtasslcert[key]))
 
 	if problem == 'warning':
-		msg = "\nMTAs have been found without SSL certificates\n"
+		msg = "\nMessage Transfer Agents have been found without a SSL Certificate\n"
 		_util_passFail(problem, msg)
 	else:
 		_util_passFail(problem)
 
 def check_mtaAgentSSLKey(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] MTA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] MTA SSL Certificate key password settings..")
 	problem = 'passed'
-	mtasslkey = gw.getMtaSSLKey()
+	mtasslkey = gw.getMtaSettings('sslKeyFile','Message Transfer Agents have been found without a SSL Key')
 	with open(healthCheckLog, 'a') as log:
 		for key in mtasslkey:
-			if 'Unable to find security setting' in (' '.join(mtasslkey[key])).lower():
+			if None == mtasslkey[key]:
 				problem = 'warning'
-			log.write("%s has MTP a SSL key: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(mtasslkey[key])))
+			log.write("%s has SSL Certificate set to: %s \n" % (key, mtasslkey[key]))
 
 	if problem == 'warning':
-		msg = "\nMTAs have been found without an SSL key\n"
+		msg = "\nMessage Transfer Agents have been found without a SSL Key\n"
 		_util_passFail(problem, msg)
 	else:
 		_util_passFail(problem)
 
 def check_mtaAgentSSLKeyPassword(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] MTA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] MTA SSL Certificate key settings..")
 	problem = 'passed'
-	mtasslkeypassword = gw.getMtaSSLKeyPassword()
+	mtasslkeypassword = gw.getMtaSettings('hasSslKeyPassword','Message Transfer Agents have been found without a SSL Key Password')
 	with open(healthCheckLog, 'a') as log:
 		for key in mtasslkeypassword:
-			if 'Unable to find security setting' in (' '.join(mtasslkeypassword[key])).lower():
+			if not mtasslkeypassword[key]:
 				problem = 'warning'
-			log.write("%s has MTP a SSL key password set: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(mtasslkeypassword[key])))
+			log.write("%s has SSL Certificate Key Password set to: %s \n" % (key, mtasslkeypassword[key]))
 
 	if problem == 'warning':
-		msg = "\nMTAs have been found without a SSL key password set\n"
+		msg = "\nMessage Transfer Agents have been found without a SSL Key Password\n"
 		_util_passFail(problem, msg)
 	else:
 		_util_passFail(problem)
 
 def check_gwiaAgentHttpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA HTTP SSL Security settings..")
 	problem = 'passed'
-	gwiahttpssl = gw.getGwiaHttpSSL()
+	gwiahttpssl = gw.getGwiaSettings('httpUsesSsl','GWIAs have been found with HTTP SSL security DISABLED')
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiahttpssl:
-			if 'disabled' in (' '.join(gwiahttpssl[key])).lower():
+			if 'DISABLED' == gwiahttpssl[key]:
 				problem = 'warning'
-			log.write("%s has HTTP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiahttpssl[key])))
+			log.write("%s has HTTP SSL set to: %s \n" % (key, gwiahttpssl[key]))
 
 	if problem == 'warning':
-		msg = "\nMTAs have been found with HTTP SSL security Disabled\n"
+		msg = "\nGWIAs have been found with HTTP SSL security DISABLED\n"
 		_util_passFail(problem, msg)
 	else:
 		_util_passFail(problem)
 
 def check_gwiaAgentMtpSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA MTP SSL Security settings..")
 	problem = 'passed'
-	gwiamtpssl = gw.getGwiaMtpSSL()
+	gwiamtpssl = gw.getGwiaSettings('mtpUsesSsl','MTAs have been found with MTP SSL security Disabled')
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiamtpssl:
-			if 'disabled' in (' '.join(gwiamtpssl[key])).lower():
+			if 'DISABLED' == gwiamtpssl[key]:
 				problem = 'warning'
-			log.write("%s has MTP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiamtpssl[key])))
+			log.write("%s has MTP SSL set to: %s \n" % (key, gwiamtpssl[key]))
 
 	if problem == 'warning':
 		msg = "\nMTAs have been found with MTP SSL security Disabled\n"
@@ -335,14 +354,14 @@ def check_gwiaAgentMtpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentImapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA IMAP SSL Security settings..")
 	problem = 'passed'
-	gwiaimapssl = gw.getGwiaImapSSL()
+	gwiaimapssl = gw.getGwiaSettings('imapUsesSsl','MTAs have been found with IMAP SSL security Disabled')
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiaimapssl:
-			if 'disabled' in (' '.join(gwiaimapssl[key])).lower():
+			if 'DISABLED' == gwiaimapssl[key]:
 				problem = 'warning'
-			log.write("%s has IMAP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiaimapssl[key])))
+			log.write("%s has IMAP SSL set to: %s \n" % (key, gwiaimapssl[key]))
 
 	if problem == 'warning':
 		msg = "\nMTAs have been found with IMAP SSL security Disabled\n"
@@ -351,14 +370,14 @@ def check_gwiaAgentImapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentLdapSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA LDAP SSL Security settings..")
 	problem = 'passed'
-	gwialdapssl = gw.getGwiaLdapSSL()
+	gwialdapssl = gw.getGwiaSettings('ldapUsesSsl','MTAs have been found with LDAP SSL security Disabled')
 	with open(healthCheckLog, 'a') as log:
 		for key in gwialdapssl:
-			if 'disabled' in (' '.join(gwialdapssl[key])).lower():
+			if 'DISABLED' == gwialdapssl[key]:
 				problem = 'warning'
-			log.write("%s has LDAP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwialdapssl[key])))
+			log.write("%s has LDAP SSL set to: %s \n" % (key, gwialdapssl[key]))
 
 	if problem == 'warning':
 		msg = "\nMTAs have been found with LDAP SSL security Disabled\n"
@@ -367,14 +386,14 @@ def check_gwiaAgentLdapSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentPopSSL(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
+	_util_NewHeader("Checking [System] GWIA POP3 SSL Security settings..")
 	problem = 'passed'
-	gwiapopssl = gw.getGwiaPopSSL()
+	gwiapopssl = gw.getGwiaSettings('popUsesSsl','MTAs have been found with POP3 SSL security Disabled')
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiapopssl:
-			if 'disabled' in (' '.join(gwiapopssl[key])).lower():
+			if 'DISABLED' == gwiapopssl[key]:
 				problem = 'warning'
-			log.write("%s has POP3 SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiapopssl[key])))
+			log.write("%s has POP3 SSL set to: %s \n" % (key, gwiapopssl[key]))
 
 	if problem == 'warning':
 		msg = "\nMTAs have been found with POP3 SSL security Disabled\n"
@@ -385,12 +404,12 @@ def check_gwiaAgentPopSSL(): # Set all Agents to Require SSL
 def check_gwiaAgentSmtpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
-	gwiasmtpssl = gw.getGwiaSmtpSSL()
+	gwiasmtpssl = gw.getGwiaSettings('smtpUsesSsl','MTAs have been found with smtp SSL security Disabled')
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiasmtpssl:
-			if 'disabled' in (' '.join(gwiasmtpssl[key])).lower():
+			if 'DISABLED' == gwiasmtpssl[key]:
 				problem = 'warning'
-			log.write("%s has SMTP SSL %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiasmtpssl[key])))
+			log.write("%s has POP3 SSL set to: %s \n" % (key, gwiasmtpssl[key]))
 
 	if problem == 'warning':
 		msg = "\nMTAs have been found with SMTP SSL security Disabled\n"
@@ -399,14 +418,14 @@ def check_gwiaAgentSmtpSSL(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentSSLCert(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Certificate file settings..")
 	problem = 'passed'
-	gwiasslcert = gw.getGwiaSSLCert()
+	gwiasslcert = gw.getGwiaSettings('sslCertificateFile', 'GWIAs have been found without a SSL Certificate', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiasslcert:
-			if 'Unable to find security setting' in (' '.join(gwiasslcert[key])).lower():
+			if None == gwiasslcert[key]:
 				problem = 'warning'
-			log.write("%s.%s has SSL Certificate set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiasslcert[key])))
+			log.write("%s has SSL Certificate set to: %s \n" % (key, gwiasslcert[key]))
 
 	if problem == 'warning':
 		msg = "\nGWIAs have been found without a SSL Certificate\n"
@@ -415,14 +434,14 @@ def check_gwiaAgentSSLCert(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentSSLKey(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Certificate Key file settings..")
 	problem = 'passed'
-	gwiasslkey = gw.getGwiaSSLKey()
+	gwiasslkey = gw.getGwiaSettings('sslKeyFile', 'GWIAs have been found without a SSL Certificate Key', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiasslkey:
-			if 'Unable to find security setting' in (' '.join(gwiasslkey[key])).lower():
+			if None == gwiasslkey[key]:
 				problem = 'warning'
-			log.write("%s.%s has SSL key set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiasslkey[key])))
+			log.write("%s has a SSL certificate key file set to: %s \n" % (key, gwiasslkey[key]))
 
 	if problem == 'warning':
 		msg = "\nGWIAs have been found without a SSL key\n"
@@ -431,14 +450,14 @@ def check_gwiaAgentSSLKey(): # Set all Agents to Require SSL
 		_util_passFail(problem)
 
 def check_gwiaAgentSSLKeyPassword(): # Set all Agents to Require SSL
-	_util_NewHeader("Checking [System] GWIA SSL Certificate settings..")
+	_util_NewHeader("Checking [System] GWIA SSL Certificate Key password settings..")
 	problem = 'passed'
-	gwiasslkeypassword = gw.getGwiaSSLKeyPassword()
+	gwiasslkeypassword = gw.getGwiaSettings('hasSslKeyPassword','GWIAs have been found without a SSL Certificate Key', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiasslkeypassword:
-			if 'Unable to find security setting' in (' '.join(gwiasslkeypassword[key])).lower():
+			if None == gwiasslkeypassword[key]:
 				problem = 'warning'
-			log.write("%s.%s has MTP a SSL key password set: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiasslkeypassword[key])))
+			log.write("%s has a SSL certificate key password set to: %s \n" % (key, gwiasslkeypassword[key]))
 
 	if problem == 'warning':
 		msg = "\nGWIAs have been found without a SSL key password set\n"
@@ -455,15 +474,15 @@ def check_agentOwner(): # Run agents as user other than root
 def check_gwiaAccessControl(): # GWIA Access Control (No relay)
 	_util_NewHeader("Checking [System] GWIA relay settings..")
 	problem = 'passed'
-	gwiarelay = gw.getGwiaRelay()
+	gwiarelay = gw.getGwiaSettings('smtpMessageRelayAllow','GWIAs have been found to have SMTP relaying set to ALLOWED')
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiarelay:
-			if 'allow' in (' '.join(gwiarelay[key])).lower():
+			if 'ALLOW' == gwiarelay[key]:
 				problem = 'warning'
-			log.write("%s.%s has SMTP relaying set to: %s \n" % (key, gwapp_variables.postofficeSystem[key], ' '.join(gwiarelay[key])))
+			log.write("%s has relaying set to: %s \n" % (key, gwiarelay[key]))
 
 	if problem == 'warning':
-		msg = "\nGWIAs have been found to have SMTP relaying allowed.\n"
+		msg = "\nGWIAs have been found to have SMTP relaying set to ALLOWED\n"
 		_util_passFail(problem, msg)
 	else:
 		_util_passFail(problem)
@@ -498,20 +517,75 @@ def check_webaccConnection(): #Webaccess suggested settings for connections
 def check_webaccMemoryHeap(): # Webaccess suggested memory settings for Tomcat
 	pass
 
-def check_gwiaThreads(): # Thread Settings for GWIA send/receive
-	pass
+def check_gwiaSendThreads(): # Thread Settings for GWIA send/receive
+	_util_NewHeader("Checking [System] GWIA SMTP send threads..")
+	problem = 'passed'
+	gwiaoutboundthreads = gw.getGwiaSettings('smtpSendThreads','GWIA SMTP send threads are outside of the normal threshold', healthCheck=True)
+	with open(healthCheckLog, 'a') as log:
+		for key in gwiaoutboundthreads:
+			if not 5 <= gwiaoutboundthreads[key] <= 25:
+				problem = 'warning'
+			log.write("%s SMTP send threads set to: %s \n" % (key, gwiaoutboundthreads[key]))
+
+	if problem == 'warning':
+		msg = "\nGWIA SMTP send threads are outside of the normal threshold\n"
+		_util_passFail(problem, msg)
+	else:
+		_util_passFail(problem)
+
+def check_gwiaReceiveThreads(): # Thread Settings for GWIA send/receive
+	_util_NewHeader("Checking [System] GWIA SMTP receive threads..")
+	problem = 'passed'
+	gwiainboundthreads = gw.getGwiaSettings('smtpReceiveThreads','GWIA SMTP receive threads are outside of the normal threshold', healthCheck=True)
+	with open(healthCheckLog, 'a') as log:
+		for key in gwiainboundthreads:
+			if not 5 <= gwiainboundthreads[key] <= 25:
+				problem = 'warning'
+			log.write("%s SMTP receive threads set to: %s \n" % (key, gwiainboundthreads[key]))
+
+	if problem == 'warning':
+		msg = "\nGWIA SMTP receive threads are outside of the normal threshold\n"
+		_util_passFail(problem, msg)
+	else:
+		_util_passFail(problem)
 
 def check_poaThreads(): # POA Thread Settings C/S Message Handler
-	pass
+	_util_NewHeader("Checking [System] POA Client/Server threads..")
+	problem = 'passed'
+	poaclientserverthreads = gw.getPoaSettings('clientServerThreads','POA Client/Server threads are outside of the normal threshold', healthCheck=True)
+	with open(healthCheckLog, 'a') as log:
+		for key in poaclientserverthreads:
+			if not 6 <= poaclientserverthreads[key] <= 20:
+				problem = 'warning'
+			log.write("%s Client/Server threads set to: %s \n" % (key, poaclientserverthreads[key]))
 
-def check_imapSettings(): # IMAP Settings for max messages per folder / Read First
-	pass
+	if problem == 'warning':
+		msg = "\nPOA Client/Server threads are outside of the normal threshold\n"
+		_util_passFail(problem, msg)
+	else:
+		_util_passFail(problem)
+
+def check_gwiaimapSettings(): # GWIA IMAP Settings for max messages per folder / Read First
+	_util_NewHeader("Checking [System] GWIA IMAP read limit..")
+	problem = 'passed'
+	gwiaimapreadlimit = gw.getGwiaSettings('imapReadLimit','IMAP read limit set to more than 10,000 items', healthCheck=True)
+	with open(healthCheckLog, 'a') as log:
+		for key in gwiaimapreadlimit:
+			if gwiaimapreadlimit[key] >= 10:
+				problem = 'warning'
+			log.write("%s IMAP read limit set to: %s \n" % (key, gwiaimapreadlimit[key]))
+
+	if problem == 'warning':
+		msg = "\nIMAP read limit set to more than 10,000 items\n"
+		_util_passFail(problem, msg)
+	else:
+		_util_passFail(problem)
 
 def check_Retention(): # Retention Plan and Software
 	pass
 
 def check_dvaConfigured():
-	_util_NewHeader("Checking [System] POA DVA..")
+	_util_NewHeader("Checking [System] POA configured for DVAs..")
 	problem = 'passed'
 	results = gw.getPoaSettings('dvaName1', 'POA has not been DVA configured', debug=True, healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
