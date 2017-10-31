@@ -76,7 +76,6 @@ def mainCheck(): # Main function to run all health checks
 	# List of checks to run..
 	# Server checks
 	check_postSecurity()
-	check_dvaConfigured()
 	check_poaAgentHttpSSL()
 	check_poaAgentMtpSSL()
 	check_poaAgentCSSSL()
@@ -103,6 +102,7 @@ def mainCheck(): # Main function to run all health checks
 	check_gwiaReceiveThreads()
 	check_poaThreads()
 	check_gwiaimapSettings()
+	check_dvaConfigured()
 
 	# Server checks
 	check_gwhaFile()
