@@ -513,7 +513,7 @@ def getMtaSettings(value, warning, debug=False, healthCheck=False):
 		getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		url = "/gwadmin-service/domains/%s/mta" % (dom)
-		r = restGetRequest(gwapp_variables.login, url)
+		r = restGetRequest(gwapp_variables.login, url, healthCheck)
 		try:
 			MtaSettings[dom] = (r.json()[value])
 		except:
@@ -529,7 +529,7 @@ def getGwiaSettings(value, warning, debug=False, healthCheck=False):
 		try:
 			for gwia in gwapp_variables.gwiaSystem[dom]:
 				url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-				r = restGetRequest(gwapp_variables.login, url)
+				r = restGetRequest(gwapp_variables.login, url, healthCheck)
 				try:
 					GwiaSettings[gwia] = (r.json()[value])
 				except:
