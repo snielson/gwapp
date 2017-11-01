@@ -106,6 +106,7 @@ def mainCheck(): # Main function to run all health checks
 
 	# Server checks
 	check_gwhaFile()
+	check_DiskSpace()
 
 	gwapp_variables.restDATA.clear()
 	print();print() # Adds spacing after all checks
@@ -600,31 +601,6 @@ def check_dvaConfigured():
 		msg = "Every Post Office has DVA configured\n"
 		_util_passFail(problem, msg)
 
-
-	# _util_NewHeader("Checking [System] Post Office DVA..")
-	# problem = 'passed'
-	
-	# with open(healthCheckLog, 'a') as log:
-	# 	# Check post office for DVA
-	# 	for post in gwapp_variables.postofficeSystem:
-	# 		DVA = None
-	# 		url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (gwapp_variables.postofficeSystem[post], post)
-	# 		r = gw.restGetRequest(gwapp_variables.login, url)
-	# 		try:
-	# 			DVA = (r.json()['object'][0]['dvaName1'])
-	# 		except:
-	# 			pass
-
-	# 		if DVA is None:
-	# 			log.write("%s.%s has no DVA configured\n" % (post, gwapp_variables.postofficeSystem[post]))
-	# 			problem = 'failed'
-
-	# if problem == 'failed':
-	# 	_util_passFail(problem)
-	# else:
-	# 	msg = "Every Post Office has DVA configured\n"
-	# 	_util_passFail(problem, msg)
-
 def check_gwhaFile(): # Look for any duplicates in the gwha.conf file
 	_util_NewHeader("Checking [Server] GWHA duplicates..")
 	problem = 'passed'
@@ -644,3 +620,50 @@ def check_gwhaFile(): # Look for any duplicates in the gwha.conf file
 	else:
 		msg = "No duplicates found in gwha.conf\n"
 		_util_passFail(problem, msg)
+
+def check_DiskSpace():
+	_util_NewHeader("Checking [Server] Disk Space..")
+	problem = 'passed'
+	agents = gw.getLocalAgentHome(gw.getLocalAgents())
+
+	diskKey = dict()
+	with open(healthCheckLog, 'a') as log:
+		for agent in agents:
+			if 'path' in agent:
+				# Check for agent data path
+				cmd = "df -H %s" % agent['path']
+				out = gw.util_subprocess(cmd)
+
+				device, size, used, available, percent, mountpoint = out[0].split("\n")[1].split()
+				if device not in diskKey:
+					diskKey[device] = percent
+					log.write(out[0])
+				# log.write("\n%s %s used" % (agent['service'],percent))
+				if int(percent.rstrip('%')) >= 80:
+					problem = 'warning'
+				elif int(percent.rstrip('%')) >= 99:
+					problem = 'failed'
+
+			if 'executable' in agent:
+				# Check for agent executable path
+				cmd = "df -H %s" % agent['executable']
+				out = gw.util_subprocess(cmd)
+
+				device, size, used, available, percent, mountpoint = out[0].split("\n")[1].split()
+				if device not in diskKey:
+					diskKey[device] = percent
+					log.write(out[0])
+				# log.write("\n%s %s used" % (agent['service'],percent))
+				if int(percent.rstrip('%')) >= 80:
+					problem = 'warning'
+				elif int(percent.rstrip('%')) >= 99:
+					problem = 'failed'
+	
+	if problem == 'warning':
+		msg = "\nSystem is low on disk space\n"
+		_util_passFail('warning', msg)
+	elif problem == 'failed':
+		msg = "\nSystem is out of space\n"
+		_util_passFail('failed', msg)
+	elif problem == 'passed':
+		_util_passFail('passed')

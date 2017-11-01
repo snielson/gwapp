@@ -160,6 +160,7 @@ DEBUG_ENABLED = True
 if DEBUG_ENABLED:
 	import gwapp_ghc as ghc
 	ghc.mainCheck()
+	# ghc.check_DiskSpace()
 
 	gw.eContinue()
 	sys.exit(0)
@@ -168,7 +169,8 @@ if DEBUG_ENABLED:
 #	Main
 ##################################################################################################
 
-import gwapp_menu as menu
-menu.main_menu()
+if __name__ == "__main__":
+	import gwapp_menu as menu
+	menu.main_menu()
 
 sys.exit(0)

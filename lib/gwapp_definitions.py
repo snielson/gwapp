@@ -489,6 +489,21 @@ def getPostSetting(value, warning, debug=False, healthCheck=False):
                 logger.warning(warning)
     return postSettings
 
+def getDomainSetting(value, warning, debug=False, healthCheck=False):
+    domSettings = dict()
+    if not healthCheck:
+	    getSystemList(gwapp_variables.login)
+    for dom in gwapp_variables.domainSystem:
+        url = "/gwadmin-service/domains/%s" % dom
+        r = restGetRequest(gwapp_variables.login, url, healthCheck)
+        try:
+            domSettings[dom] = (r.json()[value])
+            if debug:
+                logger.debug("Domain [%s] %s set to %s" % (dom, value, r.json()[value]))
+        except:
+            logger.warning(warning)
+    return domSettings
+
 def getPoaSettings(value, warning, debug=False, healthCheck=False):
 	PoaSettings = dict()
 	if not healthCheck:
@@ -538,3 +553,17 @@ def getGwiaSettings(value, warning, debug=False, healthCheck=False):
 		except KeyError:
 			pass
 	return GwiaSettings
+
+def getLocalAgentHome(gwhaList):
+	# Uses gwha settings for startup paths. Reads --home from startup files
+	for agent in gwhaList:
+		with open(agent['startup'], 'r') as startup:
+			for line in startup:
+				if '--home' in line and ';' not in line:
+					try:
+						agent['path'] = line.split(' ')[1].split('\n')[0]
+						logger.info("Home path set to [%s] for %s" % (agent['path'], agent['service']))
+					except IndexError:
+						logger.error("Unable to find home path for %s" % agent['service'])
+	return gwhaList
+	
