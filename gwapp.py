@@ -156,11 +156,10 @@ gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 #	DEBUG
 ##################################################################################################
 
-DEBUG_ENABLED = True
+DEBUG_ENABLED = False
 if DEBUG_ENABLED:
 	import gwapp_ghc as ghc
-	ghc.mainCheck()
-	# ghc.check_DiskSpace()
+	pass
 
 	gw.eContinue()
 	sys.exit(0)

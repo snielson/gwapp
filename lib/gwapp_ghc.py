@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import sys
+import os
 import traceback
 import datetime
-import json
+import pydoc
 import logging, logging.config
 import gwapp_definitions as gw
 import gwapp_variables
@@ -111,6 +112,10 @@ def mainCheck(): # Main function to run all health checks
 
 	gwapp_variables.restDATA.clear()
 	print();print() # Adds spacing after all checks
+	print ("Log created at: %s" % healthCheckLog)
+	if gw.askYesOrNo("View the %s" % os.path.basename(healthCheckLog)):
+		with open(healthCheckLog, 'r') as healthFile:
+			pydoc.pager(healthFile.read())
 
 
 def check_postSecurity():
@@ -690,6 +695,7 @@ def check_DiskReadSpeed():
 				deviceKey.append(device)
 
 	# Testing read speed of devices
+	# Probably not the best way to test it, or not long enough. Good enough for now
 	for device in deviceKey:
 		cmd = "hdparm -t %s" % device
 		out = gw.util_subprocess(cmd)

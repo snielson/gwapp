@@ -9,6 +9,7 @@ import ConfigParser
 Config = ConfigParser.ConfigParser()
 import getch
 getch = getch._Getch()
+import gwapp_ghc as ghc
 
 # GLOBAL VARIABLES
 import gwapp_variables
@@ -63,14 +64,14 @@ def build_avaialbe(menu):
 ##################################################################################################
 
 def main_menu():
-	menu = ['1. Test', '\n     0. Quit']
-	sub_menus = {'1': menu_1}
+	menu = ['1. Checks..', '2. Disassociate..', '\n     0. Quit']
+	sub_menus = {'1': check_menu, '2': disassociate_menu}
 	
 	available = build_avaialbe(menu)
 	show_menu(menu)
 
 	# Print disclaimer
-	gw.print_there(23,6, DISCLAIMER)
+	# gw.print_there(23,6, gwapp_variables.DISCLAIMER) ## TODO: Enable this?
 	
 	choice = get_choice(available)
 	if choice == '0':
@@ -83,8 +84,8 @@ def main_menu():
 
 ## Sub menus ##
 
-def menu_1():
-	menu = ['1. Test 1', '\n     0. Back']
+def check_menu():
+	menu = ['1. Health Check', '\n     0. Back']
 	
 	available = build_avaialbe(menu)
 	loop = True
@@ -92,6 +93,27 @@ def menu_1():
 		show_menu(menu)
 		choice = get_choice(available)
 		if choice == '1':
+			ghc.mainCheck()
+			gw.eContinue()
+		elif choice == '0':
+			loop = False
+			main_menu()
+
+def disassociate_menu():
+	menu = ['1. System', '2. User', '3. Group', '4. Resource', '\n     0. Back']
+	
+	available = build_avaialbe(menu)
+	loop = True
+	while loop:
+		show_menu(menu)
+		choice = get_choice(available)
+		if choice == '1':
+			pass
+		elif choice == '2':
+			pass
+		elif choice == '3':
+			pass
+		elif choice == '4':
 			pass
 		elif choice == '0':
 			loop = False
