@@ -107,6 +107,7 @@ def mainCheck(): # Main function to run all health checks
 	# Server checks
 	check_gwhaFile()
 	check_DiskSpace()
+	check_DiskReadSpeed()
 
 	gwapp_variables.restDATA.clear()
 	print();print() # Adds spacing after all checks
@@ -667,3 +668,41 @@ def check_DiskSpace():
 		_util_passFail('failed', msg)
 	elif problem == 'passed':
 		_util_passFail('passed')
+
+def check_DiskReadSpeed():
+	_util_NewHeader("Checking [Server] Disk Read Speed..")
+	problem = 'passed'
+	agents = gw.getLocalAgentHome(gw.getLocalAgents())
+	deviceKey = []
+	# Get device path of agents and data
+	for agent in agents:
+		if 'path' in agent:
+			cmd = "df -H %s" % agent['path']
+			out = gw.util_subprocess(cmd)
+			device = out[0].split("\n")[1].split()[0]
+			if device not in deviceKey:
+				deviceKey.append(device)
+		if 'executable' in agent:
+			cmd = "df -H %s" % agent['executable']
+			out = gw.util_subprocess(cmd)
+			device = out[0].split("\n")[1].split()[0]
+			if device not in deviceKey:
+				deviceKey.append(device)
+
+	# Testing read speed of devices
+	for device in deviceKey:
+		cmd = "hdparm -t %s" % device
+		out = gw.util_subprocess(cmd)
+
+		with open(healthCheckLog, 'a') as log:
+				log.write("Disk Read speed %s MB/sec on %s\n" % (out[0].split(' ')[-1-1], device))
+		logger.info("Disk Read speed %s MB/sec on %s" % (out[0].split(' ')[-1-1], device))
+		if float(out[0].split(' ')[-1-1]) <= 13.33:
+			problem = 'warning'
+
+	if problem == 'warning':
+		msg = "\nDisk read appears to be slow\n"
+		_util_passFail('warning', msg)
+	elif problem == 'passed':
+		msg = "\nDisk read meets recommended MB/sec\n"
+		_util_passFail('passed', msg)

@@ -6,7 +6,7 @@ __email__ = "snielson@projectuminfinitas.com"
 
 def initVersion():
 	global gwappversion
-	gwappversion = '1'
+	gwappversion = '0.1.6'
 
 def setGlobalVariables(): # GLOBAL VARIABLES
 	global SCRIPT_NAME
