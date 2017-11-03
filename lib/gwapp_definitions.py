@@ -56,7 +56,7 @@ sys.excepthook = my_handler
 def clear():
 	tmp = subprocess.call('clear',shell=True)
 
-def gwappBanner(gwappversion):
+def gwappBanner():
 	banner = """
      __ ___      ____ _ _ __  _ __  
     / _` \\ \\ /\\ / / _` | '_ \\| '_ \\ 
@@ -65,10 +65,10 @@ def gwappBanner(gwappversion):
     |___/              |_|   |_|   
 	"""
 	clear()
-	print (banner + "\t\t         v" + gwappversion + "\n")
+	print (banner + "\t\t         v" + gwapp_variables.gwappversion + "\n")
 
 def print_disclaimer(gwappversion):
-	gwappBanner(gwapp_variables.gwappversion)
+	gwappBanner()
 	prompt = 'Use at your own discretion. gwapp is not supported by Novell.\nSee [gwapp --bug] to report issues.'
 	print (prompt)
 	r,w,x = select.select([sys.stdin], [], [], 10)
@@ -232,7 +232,7 @@ def checkDictKeys(list):
 	return result
 
 def saveServerSettings(reconfig=False, debug=False):
-	gwappBanner(gwapp_variables.gwappversion)
+	gwappBanner()
 	Config.read(gwapp_variables.gwappSettings)
 	if Config.get('Login', 'url') == 'None' or Config.get('Login','admin') == 'None' or reconfig:
 		login = getGWLogin(debug)
@@ -566,4 +566,3 @@ def getLocalAgentHome(gwhaList):
 					except IndexError:
 						logger.error("Unable to find home path for %s" % agent['service'])
 	return gwhaList
-	

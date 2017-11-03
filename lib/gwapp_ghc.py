@@ -65,7 +65,7 @@ def _util_passFail(result, msg=None): # Prints to screen Passed,Failed, Warning,
 
 
 def mainCheck(): # Main function to run all health checks
-	gw.gwappBanner(gwapp_variables.gwappversion)
+	gw.gwappBanner()
 	# Get current system list
 	gw.getSystemList(gwapp_variables.login)
 
