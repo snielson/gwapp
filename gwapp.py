@@ -158,10 +158,7 @@ gw.createTrustedApp(gwapp_variables.login, delete=args.newApp)
 
 DEBUG_ENABLED = False
 if DEBUG_ENABLED:
-	import gwapp_disassociate as dis
-	d = dis.dissassociate()
-	d.buildList('system', ['user', 'group', 'resource'])
-	print d.getList()
+	pass
 
 	gw.eContinue()
 	sys.exit(0)
