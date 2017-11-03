@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import sys
+import os
 import traceback
 import datetime
-import json
+import pydoc
 import logging, logging.config
 import gwapp_definitions as gw
 import gwapp_variables
@@ -64,7 +65,7 @@ def _util_passFail(result, msg=None): # Prints to screen Passed,Failed, Warning,
 
 
 def mainCheck(): # Main function to run all health checks
-	gw.gwappBanner(gwapp_variables.gwappversion)
+	gw.gwappBanner()
 	# Get current system list
 	gw.getSystemList(gwapp_variables.login)
 
@@ -106,9 +107,15 @@ def mainCheck(): # Main function to run all health checks
 
 	# Server checks
 	check_gwhaFile()
+	check_DiskSpace()
+	check_DiskReadSpeed()
 
 	gwapp_variables.restDATA.clear()
 	print();print() # Adds spacing after all checks
+	print ("Log created at: %s" % healthCheckLog)
+	if gw.askYesOrNo("View the %s" % os.path.basename(healthCheckLog)):
+		with open(healthCheckLog, 'r') as healthFile:
+			pydoc.pager(healthFile.read())
 
 
 def check_postSecurity():
@@ -131,7 +138,7 @@ def check_postSecurity():
 def check_poaAgentHttpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] POA HTTP SSL Security settings..")
 	problem = 'passed'
-	poahttpssl = gw.getPoaSettings('httpUsesSsl', 'Post Offices have been found with HTTP SSL security DISABLED')
+	poahttpssl = gw.getPoaSettings('httpUsesSsl', 'Post Offices have been found with HTTP SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in poahttpssl:
 			if 'DISABLED' == poahttpssl[key]:
@@ -244,7 +251,7 @@ def check_poaAgentSSLKey(): # Set all Agents to Require SSL
 def check_mtaAgentHttpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] MTA HTTP SSL Security settings..")
 	problem = 'passed'
-	mtahttpssl = gw.getMtaSettings('httpUsesSsl', 'Message Transfer Agents have been found with HTTP SSL security DISABLED')
+	mtahttpssl = gw.getMtaSettings('httpUsesSsl', 'Message Transfer Agents have been found with HTTP SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in mtahttpssl:
 			if 'DISABLED' == mtahttpssl[key]:
@@ -260,7 +267,7 @@ def check_mtaAgentHttpSSL(): # Set all Agents to Require SSL
 def check_mtaAgentMtpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] MTA SSL Security settings..")
 	problem = 'passed'
-	mtamtpssl = gw.getMtaSettings('mtpUsesSsl', 'Message Transfer Agents have been found with MTP SSL security DISABLED')
+	mtamtpssl = gw.getMtaSettings('mtpUsesSsl', 'Message Transfer Agents have been found with MTP SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in mtamtpssl:
 			if 'DISABLED' == mtamtpssl[key]:
@@ -292,7 +299,7 @@ def check_mtaAgentSSLCert(): # Set all Agents to Require SSL
 def check_mtaAgentSSLKey(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] MTA SSL Certificate key password settings..")
 	problem = 'passed'
-	mtasslkey = gw.getMtaSettings('sslKeyFile','Message Transfer Agents have been found without a SSL Key')
+	mtasslkey = gw.getMtaSettings('sslKeyFile','Message Transfer Agents have been found without a SSL Key', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in mtasslkey:
 			if None == mtasslkey[key]:
@@ -308,7 +315,7 @@ def check_mtaAgentSSLKey(): # Set all Agents to Require SSL
 def check_mtaAgentSSLKeyPassword(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] MTA SSL Certificate key settings..")
 	problem = 'passed'
-	mtasslkeypassword = gw.getMtaSettings('hasSslKeyPassword','Message Transfer Agents have been found without a SSL Key Password')
+	mtasslkeypassword = gw.getMtaSettings('hasSslKeyPassword','Message Transfer Agents have been found without a SSL Key Password', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in mtasslkeypassword:
 			if not mtasslkeypassword[key]:
@@ -324,7 +331,7 @@ def check_mtaAgentSSLKeyPassword(): # Set all Agents to Require SSL
 def check_gwiaAgentHttpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] GWIA HTTP SSL Security settings..")
 	problem = 'passed'
-	gwiahttpssl = gw.getGwiaSettings('httpUsesSsl','GWIAs have been found with HTTP SSL security DISABLED')
+	gwiahttpssl = gw.getGwiaSettings('httpUsesSsl','GWIAs have been found with HTTP SSL security DISABLED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiahttpssl:
 			if 'DISABLED' == gwiahttpssl[key]:
@@ -340,7 +347,7 @@ def check_gwiaAgentHttpSSL(): # Set all Agents to Require SSL
 def check_gwiaAgentMtpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] GWIA MTP SSL Security settings..")
 	problem = 'passed'
-	gwiamtpssl = gw.getGwiaSettings('mtpUsesSsl','MTAs have been found with MTP SSL security Disabled')
+	gwiamtpssl = gw.getGwiaSettings('mtpUsesSsl','MTAs have been found with MTP SSL security Disabled', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiamtpssl:
 			if 'DISABLED' == gwiamtpssl[key]:
@@ -356,7 +363,7 @@ def check_gwiaAgentMtpSSL(): # Set all Agents to Require SSL
 def check_gwiaAgentImapSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] GWIA IMAP SSL Security settings..")
 	problem = 'passed'
-	gwiaimapssl = gw.getGwiaSettings('imapUsesSsl','MTAs have been found with IMAP SSL security Disabled')
+	gwiaimapssl = gw.getGwiaSettings('imapUsesSsl','MTAs have been found with IMAP SSL security Disabled', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiaimapssl:
 			if 'DISABLED' == gwiaimapssl[key]:
@@ -372,7 +379,7 @@ def check_gwiaAgentImapSSL(): # Set all Agents to Require SSL
 def check_gwiaAgentLdapSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] GWIA LDAP SSL Security settings..")
 	problem = 'passed'
-	gwialdapssl = gw.getGwiaSettings('ldapUsesSsl','MTAs have been found with LDAP SSL security Disabled')
+	gwialdapssl = gw.getGwiaSettings('ldapUsesSsl','MTAs have been found with LDAP SSL security Disabled', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwialdapssl:
 			if 'DISABLED' == gwialdapssl[key]:
@@ -388,7 +395,7 @@ def check_gwiaAgentLdapSSL(): # Set all Agents to Require SSL
 def check_gwiaAgentPopSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] GWIA POP3 SSL Security settings..")
 	problem = 'passed'
-	gwiapopssl = gw.getGwiaSettings('popUsesSsl','MTAs have been found with POP3 SSL security Disabled')
+	gwiapopssl = gw.getGwiaSettings('popUsesSsl','MTAs have been found with POP3 SSL security Disabled', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiapopssl:
 			if 'DISABLED' == gwiapopssl[key]:
@@ -404,7 +411,7 @@ def check_gwiaAgentPopSSL(): # Set all Agents to Require SSL
 def check_gwiaAgentSmtpSSL(): # Set all Agents to Require SSL
 	_util_NewHeader("Checking [System] GWIA SSL Security settings..")
 	problem = 'passed'
-	gwiasmtpssl = gw.getGwiaSettings('smtpUsesSsl','MTAs have been found with smtp SSL security Disabled')
+	gwiasmtpssl = gw.getGwiaSettings('smtpUsesSsl','MTAs have been found with smtp SSL security Disabled', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiasmtpssl:
 			if 'DISABLED' == gwiasmtpssl[key]:
@@ -474,7 +481,7 @@ def check_agentOwner(): # Run agents as user other than root
 def check_gwiaAccessControl(): # GWIA Access Control (No relay)
 	_util_NewHeader("Checking [System] GWIA relay settings..")
 	problem = 'passed'
-	gwiarelay = gw.getGwiaSettings('smtpMessageRelayAllow','GWIAs have been found to have SMTP relaying set to ALLOWED')
+	gwiarelay = gw.getGwiaSettings('smtpMessageRelayAllow','GWIAs have been found to have SMTP relaying set to ALLOWED', healthCheck=True)
 	with open(healthCheckLog, 'a') as log:
 		for key in gwiarelay:
 			if 'ALLOW' == gwiarelay[key]:
@@ -600,31 +607,6 @@ def check_dvaConfigured():
 		msg = "Every Post Office has DVA configured\n"
 		_util_passFail(problem, msg)
 
-
-	# _util_NewHeader("Checking [System] Post Office DVA..")
-	# problem = 'passed'
-	
-	# with open(healthCheckLog, 'a') as log:
-	# 	# Check post office for DVA
-	# 	for post in gwapp_variables.postofficeSystem:
-	# 		DVA = None
-	# 		url = "/gwadmin-service/domains/%s/postoffices/%s/poas" % (gwapp_variables.postofficeSystem[post], post)
-	# 		r = gw.restGetRequest(gwapp_variables.login, url)
-	# 		try:
-	# 			DVA = (r.json()['object'][0]['dvaName1'])
-	# 		except:
-	# 			pass
-
-	# 		if DVA is None:
-	# 			log.write("%s.%s has no DVA configured\n" % (post, gwapp_variables.postofficeSystem[post]))
-	# 			problem = 'failed'
-
-	# if problem == 'failed':
-	# 	_util_passFail(problem)
-	# else:
-	# 	msg = "Every Post Office has DVA configured\n"
-	# 	_util_passFail(problem, msg)
-
 def check_gwhaFile(): # Look for any duplicates in the gwha.conf file
 	_util_NewHeader("Checking [Server] GWHA duplicates..")
 	problem = 'passed'
@@ -644,3 +626,89 @@ def check_gwhaFile(): # Look for any duplicates in the gwha.conf file
 	else:
 		msg = "No duplicates found in gwha.conf\n"
 		_util_passFail(problem, msg)
+
+def check_DiskSpace():
+	_util_NewHeader("Checking [Server] Disk Space..")
+	problem = 'passed'
+	agents = gw.getLocalAgentHome(gw.getLocalAgents())
+
+	diskKey = dict()
+	with open(healthCheckLog, 'a') as log:
+		for agent in agents:
+			if 'path' in agent:
+				# Check for agent data path
+				cmd = "df -H %s" % agent['path']
+				out = gw.util_subprocess(cmd)
+
+				device, size, used, available, percent, mountpoint = out[0].split("\n")[1].split()
+				if device not in diskKey:
+					diskKey[device] = percent
+					log.write(out[0])
+				# log.write("\n%s %s used" % (agent['service'],percent))
+				if int(percent.rstrip('%')) >= 80:
+					problem = 'warning'
+				elif int(percent.rstrip('%')) >= 99:
+					problem = 'failed'
+
+			if 'executable' in agent:
+				# Check for agent executable path
+				cmd = "df -H %s" % agent['executable']
+				out = gw.util_subprocess(cmd)
+
+				device, size, used, available, percent, mountpoint = out[0].split("\n")[1].split()
+				if device not in diskKey:
+					diskKey[device] = percent
+					log.write(out[0])
+				# log.write("\n%s %s used" % (agent['service'],percent))
+				if int(percent.rstrip('%')) >= 80:
+					problem = 'warning'
+				elif int(percent.rstrip('%')) >= 99:
+					problem = 'failed'
+	
+	if problem == 'warning':
+		msg = "\nSystem is low on disk space\n"
+		_util_passFail('warning', msg)
+	elif problem == 'failed':
+		msg = "\nSystem is out of space\n"
+		_util_passFail('failed', msg)
+	elif problem == 'passed':
+		_util_passFail('passed')
+
+def check_DiskReadSpeed():
+	_util_NewHeader("Checking [Server] Disk Read Speed..")
+	problem = 'passed'
+	agents = gw.getLocalAgentHome(gw.getLocalAgents())
+	deviceKey = []
+	# Get device path of agents and data
+	for agent in agents:
+		if 'path' in agent:
+			cmd = "df -H %s" % agent['path']
+			out = gw.util_subprocess(cmd)
+			device = out[0].split("\n")[1].split()[0]
+			if device not in deviceKey:
+				deviceKey.append(device)
+		if 'executable' in agent:
+			cmd = "df -H %s" % agent['executable']
+			out = gw.util_subprocess(cmd)
+			device = out[0].split("\n")[1].split()[0]
+			if device not in deviceKey:
+				deviceKey.append(device)
+
+	# Testing read speed of devices
+	# Probably not the best way to test it, or not long enough. Good enough for now
+	for device in deviceKey:
+		cmd = "hdparm -t %s" % device
+		out = gw.util_subprocess(cmd)
+
+		with open(healthCheckLog, 'a') as log:
+				log.write("Disk Read speed %s MB/sec on %s\n" % (out[0].split(' ')[-1-1], device))
+		logger.info("Disk Read speed %s MB/sec on %s" % (out[0].split(' ')[-1-1], device))
+		if float(out[0].split(' ')[-1-1]) <= 13.33:
+			problem = 'warning'
+
+	if problem == 'warning':
+		msg = "\nDisk read appears to be slow\n"
+		_util_passFail('warning', msg)
+	elif problem == 'passed':
+		msg = "\nDisk read meets recommended MB/sec\n"
+		_util_passFail('passed', msg)

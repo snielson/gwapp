@@ -6,7 +6,7 @@ __email__ = "snielson@projectuminfinitas.com"
 
 def initVersion():
 	global gwappversion
-	gwappversion = '1'
+	gwappversion = '0.1.6'
 
 def setGlobalVariables(): # GLOBAL VARIABLES
 	global SCRIPT_NAME
@@ -17,6 +17,7 @@ def setGlobalVariables(): # GLOBAL VARIABLES
 	global gwappLogSettings
 	global gwappSettings
 	global COMPANY_BU
+	global DISCLAIMER
 	global ERROR_MSG
 	SCRIPT_NAME = 'gwapp'
 	gwappDirectory = "/opt/gwapp"
@@ -27,7 +28,7 @@ def setGlobalVariables(): # GLOBAL VARIABLES
 	gwappSettings = gwappConf + "/setting.cfg"
 	COMPANY_BU = 'Micro Focus'
 	ERROR_MSG = "\ndgwapp has encountered an error. See gwapp.log for more details"
-
+	DISCLAIMER = "%s accepts no liability for the consequences of any actions taken\n     by the use of this application. Use at your own discretion" % COMPANY_BU
 
 def initLogin():
 	global login

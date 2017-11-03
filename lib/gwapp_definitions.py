@@ -56,7 +56,7 @@ sys.excepthook = my_handler
 def clear():
 	tmp = subprocess.call('clear',shell=True)
 
-def gwappBanner(gwappversion):
+def gwappBanner():
 	banner = """
      __ ___      ____ _ _ __  _ __  
     / _` \\ \\ /\\ / / _` | '_ \\| '_ \\ 
@@ -65,10 +65,10 @@ def gwappBanner(gwappversion):
     |___/              |_|   |_|   
 	"""
 	clear()
-	print (banner + "\t\t         v" + gwappversion + "\n")
+	print (banner + "\t\t         v" + gwapp_variables.gwappversion + "\n")
 
 def print_disclaimer(gwappversion):
-	gwappBanner(gwapp_variables.gwappversion)
+	gwappBanner()
 	prompt = 'Use at your own discretion. gwapp is not supported by Novell.\nSee [gwapp --bug] to report issues.'
 	print (prompt)
 	r,w,x = select.select([sys.stdin], [], [], 10)
@@ -232,7 +232,7 @@ def checkDictKeys(list):
 	return result
 
 def saveServerSettings(reconfig=False, debug=False):
-	gwappBanner(gwapp_variables.gwappversion)
+	gwappBanner()
 	Config.read(gwapp_variables.gwappSettings)
 	if Config.get('Login', 'url') == 'None' or Config.get('Login','admin') == 'None' or reconfig:
 		login = getGWLogin(debug)
@@ -489,6 +489,21 @@ def getPostSetting(value, warning, debug=False, healthCheck=False):
                 logger.warning(warning)
     return postSettings
 
+def getDomainSetting(value, warning, debug=False, healthCheck=False):
+    domSettings = dict()
+    if not healthCheck:
+	    getSystemList(gwapp_variables.login)
+    for dom in gwapp_variables.domainSystem:
+        url = "/gwadmin-service/domains/%s" % dom
+        r = restGetRequest(gwapp_variables.login, url, healthCheck)
+        try:
+            domSettings[dom] = (r.json()[value])
+            if debug:
+                logger.debug("Domain [%s] %s set to %s" % (dom, value, r.json()[value]))
+        except:
+            logger.warning(warning)
+    return domSettings
+
 def getPoaSettings(value, warning, debug=False, healthCheck=False):
 	PoaSettings = dict()
 	if not healthCheck:
@@ -513,7 +528,7 @@ def getMtaSettings(value, warning, debug=False, healthCheck=False):
 		getSystemList(gwapp_variables.login)
 	for dom in gwapp_variables.domainSystem:
 		url = "/gwadmin-service/domains/%s/mta" % (dom)
-		r = restGetRequest(gwapp_variables.login, url)
+		r = restGetRequest(gwapp_variables.login, url, healthCheck)
 		try:
 			MtaSettings[dom] = (r.json()[value])
 		except:
@@ -529,7 +544,7 @@ def getGwiaSettings(value, warning, debug=False, healthCheck=False):
 		try:
 			for gwia in gwapp_variables.gwiaSystem[dom]:
 				url = "/gwadmin-service/domains/%s/gwias/%s" % (dom, gwia)
-				r = restGetRequest(gwapp_variables.login, url)
+				r = restGetRequest(gwapp_variables.login, url, healthCheck)
 				try:
 					GwiaSettings[gwia] = (r.json()[value])
 				except:
@@ -538,3 +553,16 @@ def getGwiaSettings(value, warning, debug=False, healthCheck=False):
 		except KeyError:
 			pass
 	return GwiaSettings
+
+def getLocalAgentHome(gwhaList):
+	# Uses gwha settings for startup paths. Reads --home from startup files
+	for agent in gwhaList:
+		with open(agent['startup'], 'r') as startup:
+			for line in startup:
+				if '--home' in line and ';' not in line:
+					try:
+						agent['path'] = line.split(' ')[1].split('\n')[0]
+						logger.info("Home path set to [%s] for %s" % (agent['path'], agent['service']))
+					except IndexError:
+						logger.error("Unable to find home path for %s" % agent['service'])
+	return gwhaList

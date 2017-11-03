@@ -31,9 +31,13 @@ class dissassociate:
 	def __init__(self):
 		self.urlList = []
 
-	def printList(self):
-		for item in self.urlList:
-			print (item)
+	def getList(self):
+		# for item in self.urlList:
+		# 	return (item)
+		return '\n'.join(self.urlList)
+
+	def clearList(self):
+		del self.urlList[:]
 
 	def getListCount(self):
 		return len(self.urlList)
@@ -79,7 +83,8 @@ class dissassociate:
 			r = gw.restGetRequest(gwapp_variables.login, url)
 			try:
 				for item in r.json()['object']:
-					self.urlList.append(item['@url'] +"/directorylink")
+					if item['@url'] +"/directorylink" not in self.urlList:
+						self.urlList.append(item['@url'] +"/directorylink")
 			except KeyError:
 				pass
 
